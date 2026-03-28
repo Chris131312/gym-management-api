@@ -1,0 +1,12 @@
+# Node dependencies
+node_modules/
+
+# Environment variables (Passwords, API Keys)
+.env
+
+# Error logs
+npm-debug.log*
+
+# OS generated files (Mac and Windows junk files)
+.DS_Store
+Thumbs.db
