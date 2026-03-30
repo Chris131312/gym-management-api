@@ -6,12 +6,12 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-pool.on("connect", () => {
-  console.log("Successfully connected to the PostgreSQL database.");
-});
-
-pool.on("error", (err) => {
-  console.error("Unexpected error on idle client.", err);
+pool.query("SELECT NOW()", (err, res) => {
+  if (err) {
+    console.error("Error connecting to the database:", err);
+  } else {
+    console.log("Successfully connected to the PostgreSQL database.");
+  }
 });
 
 module.exports = pool;
