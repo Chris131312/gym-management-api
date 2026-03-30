@@ -38,6 +38,25 @@ app.post("/api/members", async (req, res) => {
   }
 });
 
+app.get("/api/members", async (req, res) => {
+  try {
+    const allMembers = await pool.query(
+      "SELECT * FROM members ORDER BY created_at DESC",
+    );
+    res.status(200).json({
+      success: true,
+      count: allMembers.rowCount,
+      data: allMembers.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching members:", error.message);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error",
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is up and running on the http://localhost:${PORT}`);
 });
