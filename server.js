@@ -113,24 +113,65 @@ app.post("/api/checkins", async (req, res) => {
   try {
     const { member_id } = req.body;
 
+    const membershipQuery = await pool.query(
+      "SELECT * FROM memberships WHERE member_id = $1 ORDER BY end_date DESC LIMIT 1",
+      [member_id],
+    );
+
+    if (membershipQuery.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        error: "Access Denied. No membership record found for this member.",
+      });
+    }
+    const membership = membershipQuery.rows[0];
+
+    const today = new Date();
+    const expirationDate = new Date(membership.end_date);
+
+    if (expirationDate < today) {
+      return res.status(403).json({
+        success: false,
+        error: `Access Denied. Membership expired on ${expirationDate.toDateString()}. Please renew at the front desk.`,
+      });
+    }
+
     const newCheckIn = await pool.query(
       "INSERT INTO check_ins (member_id) VALUES ($1) RETURNING *",
       [member_id],
     );
     res.status(201).json({
       success: true,
-      message: "Check-in successful! Welcome to the gym.",
-      data: newCheckIn.rows[0],
+      message: "Access Granted! Have a great workout.",
+      data: newCheckIn[0],
     });
   } catch (error) {
-    console.error("Error registering check-in:", error.message);
+    console.error("Error processing check-in", error.message);
+    res.status(500).json({ success: false, error: "Internal server error." });
+  }
+});
 
-    if (error.code === "23503") {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid member ID, This person is not registered in the gym.",
-      });
-    }
+//SELL MEMBERSHIPS
+app.post("/api/memberships", async (req, res) => {
+  try {
+    const { member_id, plan_name, price, duration_in_days } = req.body;
+
+    const newMembership = await pool.query(
+      `
+      INSERT INTO memberships (member_id, plan_name, price, end_date) 
+            VALUES ($1, $2, $3, CURRENT_DATE + $4 * INTERVAL '1 day') 
+            RETURNING *
+      `,
+      [member_id, plan_name, price, duration_in_days],
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Membership activated successfully!",
+      data: newMembership.rows[0],
+    });
+  } catch (error) {
+    console.error("Error selling membership:", error.message);
     res.status(500).json({ success: false, error: "Internal server error." });
   }
 });
