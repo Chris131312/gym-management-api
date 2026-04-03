@@ -108,6 +108,33 @@ app.delete("/api/members/:id", async (req, res) => {
   }
 });
 
+//Register Check-in
+app.post("/api/checkins", async (req, res) => {
+  try {
+    const { member_id } = req.body;
+
+    const newCheckIn = await pool.query(
+      "INSERT INTO check_ins (member_id) VALUES ($1) RETURNING *",
+      [member_id],
+    );
+    res.status(201).json({
+      success: true,
+      message: "Check-in successful! Welcome to the gym.",
+      data: newCheckIn.rows[0],
+    });
+  } catch (error) {
+    console.error("Error registering check-in:", error.message);
+
+    if (error.code === "23503") {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid member ID, This person is not registered in the gym.",
+      });
+    }
+    res.status(500).json({ success: false, error: "Internal server error." });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is up and running on http://localhost:${PORT}`);
 });
