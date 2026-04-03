@@ -135,6 +135,33 @@ app.post("/api/checkins", async (req, res) => {
   }
 });
 
+//Read Check-In with member info
+app.get("/api/checkins", async (req, res) => {
+  try {
+    const query = `
+    SELECT
+    check_ins.id AS checkin_id,
+    check_ins.check_in_time,
+    members.first_name,
+    members.last_name
+    FROM check_ins
+    INNER JOIN members ON check_ins.member_id = members.id
+    ORDER BY check_ins.check_in_time DESC;
+    `;
+
+    const recentCheckIns = await pool.query(query);
+
+    res.status(200).json({
+      success: true,
+      count: recentCheckIns.rowCount,
+      data: recentCheckIns.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching check-ins:", error.message);
+    res.status(500).json({ success: false, error: "Internal server error." });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is up and running on http://localhost:${PORT}`);
 });
