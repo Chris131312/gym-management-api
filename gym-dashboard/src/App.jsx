@@ -3,11 +3,54 @@ import { Dumbbell, Users, CreditCard, Activity } from "lucide-react";
 
 function App() {
   const [activeTab, setActiveTab] = useState("check-in");
+  const [memberId, setMemberId] = useState("");
+  const [statusMessage, setStatusMessage] = useState(null);
+
+  const handleCheckIn = async () => {
+    if (!memberId.trim()) {
+      setStatusMessage({
+        type: "error",
+        text: "Please enter a valid Member ID.",
+      });
+      return;
+    }
+
+    setStatusMessage({ type: "info", text: "Connecting to server..." });
+
+    try {
+      const response = await fetch("http://localhost:3000/api/checkins", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ member_id: memberId }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setStatusMessage({ type: "success", text: data.message });
+        setMemberId("");
+      } else {
+        setStatusMessage({
+          type: "error",
+          text: data.error || "Access Denied.",
+        });
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      setStatusMessage({
+        type: "error",
+        text: "Cannot connect to the server. Is Node.js running on port 3000?",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
+      {/* SIDEBAR NAVIGATION */}
       <aside className="w-64 bg-white shadow-md">
-        <div className="p-6 flex items-center gap-3 text-blue-600 boder-b border-gray-100">
+        <div className="p-6 flex items-center gap-3 text-blue-600 border-b border-gray-100">
           <Dumbbell className="w-8 h-8" />
           <h1 className="text-xl font-bold text-gray-800">Gym OS</h1>
         </div>
@@ -15,7 +58,11 @@ function App() {
         <nav className="mt-6 flex flex-col gap-2 px-4">
           <button
             onClick={() => setActiveTab("check-in")}
-            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "check-in" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
+            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${
+              activeTab === "check-in"
+                ? "bg-blue-50 text-blue-600"
+                : "text-gray-600 hover:bg-gray-50"
+            }`}
           >
             <Activity className="w-5 h-5" />
             Check-in Scanner
@@ -23,7 +70,11 @@ function App() {
 
           <button
             onClick={() => setActiveTab("members")}
-            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "members" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
+            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${
+              activeTab === "members"
+                ? "bg-blue-50 text-blue-600"
+                : "text-gray-600 hover:bg-gray-50"
+            }`}
           >
             <Users className="w-5 h-5" />
             Members Directory
@@ -31,7 +82,11 @@ function App() {
 
           <button
             onClick={() => setActiveTab("memberships")}
-            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "memberships" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
+            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${
+              activeTab === "memberships"
+                ? "bg-blue-50 text-blue-600"
+                : "text-gray-600 hover:bg-gray-50"
+            }`}
           >
             <CreditCard className="w-5 h-5" />
             Memberships
@@ -39,7 +94,9 @@ function App() {
         </nav>
       </aside>
 
+      {/* MAIN CONTENT AREA */}
       <main className="flex-1 p-10">
+        {/* CHECK-IN VIEW */}
         {activeTab === "check-in" && (
           <div className="max-w-2xl mx-auto">
             <h2 className="text-3xl font-bold text-gray-800 mb-6">
@@ -55,15 +112,35 @@ function App() {
                 <input
                   type="text"
                   placeholder="e.g. bd0f4117-..."
-                  className="flex-1 border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-blue-500"
+                  value={memberId}
+                  onChange={(e) => setMemberId(e.target.value)}
+                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <button className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                <button
+                  onClick={handleCheckIn}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
                   Process Entry
                 </button>
               </div>
+
+              {/* Status Message Display */}
+              {statusMessage && (
+                <div
+                  className={`mt-4 p-3 rounded-lg text-sm font-medium ${
+                    statusMessage.type === "success"
+                      ? "bg-green-50 text-green-700 border border-green-200"
+                      : statusMessage.type === "error"
+                        ? "bg-red-50 text-red-700 border border-red-200"
+                        : "bg-blue-50 text-blue-700 border border-blue-200"
+                  }`}
+                >
+                  {statusMessage.text}
+                </div>
+              )}
             </div>
 
-            {/* Recent Activity Table*/}
+            {/* Recent Activity Table (Static for now) */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-4 border-b border-gray-100 bg-gray-50">
                 <h3 className="font-semibold text-gray-700">
@@ -77,22 +154,22 @@ function App() {
           </div>
         )}
 
-        {/* MEMBERS VIEW*/}
+        {/* MEMBERS VIEW */}
         {activeTab === "members" && (
           <div>
             <h2 className="text-3xl font-bold text-gray-800">
               Members Directory
             </h2>
             <p className="text-gray-600 mt-2">
-              Member list will rendered here.
+              Member list will be rendered here.
             </p>
           </div>
         )}
 
-        {/* MEMBERSHIPS VIEW*/}
+        {/* MEMBERSHIPS VIEW */}
         {activeTab === "memberships" && (
           <div>
-            <h2 className="text-3xl font-bold text-gray-800">Point of Sale</h2>.
+            <h2 className="text-3xl font-bold text-gray-800">Point of Sale</h2>
             <p className="text-gray-600 mt-2">
               Membership purchasing will be rendered here.
             </p>
