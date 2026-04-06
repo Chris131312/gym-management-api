@@ -1,5 +1,5 @@
 import React, { use, useEffect, useState } from "react";
-import { Dumbbell, Users, CreditCard, Activity } from "lucide-react";
+import { Dumbbell, Users, CreditCard, Activity, Search } from "lucide-react";
 
 function App() {
   const [activeTab, setActiveTab] = useState("check-in");
@@ -70,6 +70,12 @@ function App() {
       fetchMembers();
     }
   }, [activeTab]);
+
+  const filteredMembers = members.filter((member) => {
+    const fulName = `${member.first_name} ${member.last_name}`.toLowerCase()
+    const searchLower = searchTerm.toLowerCase()
+    return fulName.includes(searchLower) || member.email.toLowerCase().includes(searchLower)
+  })
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
