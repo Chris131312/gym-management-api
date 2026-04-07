@@ -9,6 +9,8 @@ function App() {
   const [members, setMembers] = useState([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
 
+  const [searchTerm, setSearchTerm] = useState("");
+
   const handleCheckIn = async () => {
     if (!memberId.trim()) {
       setStatusMessage({
@@ -71,11 +73,15 @@ function App() {
     }
   }, [activeTab]);
 
+  //FILTER MEMBERS
   const filteredMembers = members.filter((member) => {
-    const fulName = `${member.first_name} ${member.last_name}`.toLowerCase()
-    const searchLower = searchTerm.toLowerCase()
-    return fulName.includes(searchLower) || member.email.toLowerCase().includes(searchLower)
-  })
+    const fulName = `${member.first_name} ${member.last_name}`.toLowerCase();
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      fulName.includes(searchLower) ||
+      member.email.toLowerCase().includes(searchLower)
+    );
+  });
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
@@ -98,12 +104,6 @@ function App() {
             className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "members" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
           >
             <Users className="w-5 h-5" /> Members Directory
-          </button>
-          <button
-            onClick={() => setActiveTab("memberships")}
-            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "memberships" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
-          >
-            <CreditCard className="w-5 h-5" /> Memberships
           </button>
         </nav>
       </aside>
@@ -146,16 +146,30 @@ function App() {
           </div>
         )}
 
-        {/* NEW: MEMBERS VIEW */}
+        {/* MEMBERS DIRECTORY VIEW */}
         {activeTab === "members" && (
           <div className="max-w-5xl mx-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-3xl font-bold text-gray-800">
                 Members Directory
               </h2>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm">
                 + New Member
               </button>
+            </div>
+
+            {/* Search Bar */}
+            <div className="mb-6 relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search members by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors shadow-sm"
+              />
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -174,20 +188,21 @@ function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {members.length === 0 ? (
+                    {/* filteredMembers  */}
+                    {filteredMembers.length === 0 ? (
                       <tr>
                         <td
                           colSpan="4"
                           className="p-8 text-center text-gray-500"
                         >
-                          No members found.
+                          No members match your search.
                         </td>
                       </tr>
                     ) : (
-                      members.map((member) => (
+                      filteredMembers.map((member) => (
                         <tr
                           key={member.id}
-                          className="border-b border-gray-50 hover:bg-gray-50"
+                          className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
                         >
                           <td className="p-4 font-medium text-gray-800">
                             {member.first_name} {member.last_name}
@@ -210,16 +225,6 @@ function App() {
                 </table>
               )}
             </div>
-          </div>
-        )}
-
-        {/* MEMBERSHIPS VIEW */}
-        {activeTab === "memberships" && (
-          <div>
-            <h2 className="text-3xl font-bold text-gray-800">Point of Sale</h2>
-            <p className="text-gray-600 mt-2">
-              Membership purchasing will be rendered here.
-            </p>
           </div>
         )}
       </main>
