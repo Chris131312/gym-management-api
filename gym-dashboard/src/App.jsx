@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { Dumbbell, Users, Activity, Search, X, LayoutDashboard } from "lucide-react";
+import {
+  Dumbbell,
+  Users,
+  Activity,
+  Search,
+  X,
+  LayoutDashboard,
+  Clock,
+} from "lucide-react";
 
 function App() {
   // STATE
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   // Check-in State
   const [memberId, setMemberId] = useState("");
   const [statusMessage, setStatusMessage] = useState(null);
+
+  //Live Feed State
+  const [recentCheckins, setRecentCheckins] = useState([]);
+  const [isLoadingCheckins, setIsLoadingCheckins] = useState(false);
 
   // Members Directory State
   const [members, setMembers] = useState([]);
@@ -78,7 +90,7 @@ function App() {
   };
 
   useEffect(() => {
-    if (activeTab === "members" || activeTab === 'dashboard') {
+    if (activeTab === "members" || activeTab === "dashboard") {
       fetchMembers();
     }
   }, [activeTab]);
@@ -166,15 +178,24 @@ function App() {
           <Dumbbell className="w-8 h-8" />
           <h1 className="text-xl font-bold text-gray-800">Gym OS</h1>
         </div>
-        
+
         <nav className="mt-6 flex flex-col gap-2 px-4">
-          <button onClick={() => setActiveTab('dashboard')} className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === 'dashboard' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}>
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "dashboard" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
+          >
             <LayoutDashboard className="w-5 h-5" /> Overview
           </button>
-          <button onClick={() => setActiveTab('check-in')} className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === 'check-in' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}>
+          <button
+            onClick={() => setActiveTab("check-in")}
+            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "check-in" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
+          >
             <Activity className="w-5 h-5" /> Check-in Scanner
           </button>
-          <button onClick={() => setActiveTab('members')} className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === 'members' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}>
+          <button
+            onClick={() => setActiveTab("members")}
+            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "members" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
+          >
             <Users className="w-5 h-5" /> Members Directory
           </button>
         </nav>
