@@ -145,7 +145,7 @@ app.post("/api/checkins", async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Access Granted! Have a great workout.",
-      data: newCheckIn[0],
+      data: newCheckIn.rows[0],
     });
   } catch (error) {
     console.error("Error processing check-in", error.message);

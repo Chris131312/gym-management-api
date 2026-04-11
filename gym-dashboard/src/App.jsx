@@ -10,14 +10,14 @@ import {
 } from "lucide-react";
 
 function App() {
-  // STATE
+  //STATE
   const [activeTab, setActiveTab] = useState("dashboard");
 
   // Check-in State
   const [memberId, setMemberId] = useState("");
   const [statusMessage, setStatusMessage] = useState(null);
 
-  //Live Feed State
+  // Live Feed State
   const [recentCheckins, setRecentCheckins] = useState([]);
   const [isLoadingCheckins, setIsLoadingCheckins] = useState(false);
 
@@ -37,8 +37,46 @@ function App() {
     phone: "",
   });
   const [formStatus, setFormStatus] = useState(null);
-
   const [errors, setErrors] = useState({});
+
+  const fetchCheckins = async () => {
+    setIsLoadingCheckins(true);
+    try {
+      const response = await fetch("http://localhost:3000/api/checkins");
+      const data = await response.json();
+      if (response.ok) {
+        setRecentCheckins(data.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching checkins:", error);
+    } finally {
+      setIsLoadingCheckins(false);
+    }
+  };
+
+  const fetchMembers = async () => {
+    setIsLoadingMembers(true);
+    try {
+      const response = await fetch("http://localhost:3000/api/members");
+      const data = await response.json();
+      if (response.ok) {
+        setMembers(data.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching members:", error);
+    } finally {
+      setIsLoadingMembers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "members" || activeTab === "dashboard") {
+      fetchMembers();
+    }
+    if (activeTab === "check-in" || activeTab === "dashboard") {
+      fetchCheckins();
+    }
+  }, [activeTab]);
 
   const handleCheckIn = async () => {
     if (!memberId.trim()) {
@@ -56,6 +94,7 @@ function App() {
         body: JSON.stringify({ member_id: memberId }),
       });
       const data = await response.json();
+
       if (response.ok) {
         setStatusMessage({ type: "success", text: data.message });
         setMemberId("");
@@ -75,45 +114,6 @@ function App() {
     }
   };
 
-  const fetchCheckins = async () => {
-    setIsLoadingCheckins(true);
-    try {
-      const response = await fetch("http://localhost:3000/api/checkins");
-      const data = await response.json();
-      if (response.ok) {
-        setRecentCheckins(data.data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching members:", error);
-    } finally {
-      setIsLoadingMembers(false);
-    }
-  };
-
-  const fetchMembers = async () => {
-    setIsLoadingMembers(true);
-    try {
-      const response = await fetch("http://localhost:3000/api/members");
-      const data = await response.json();
-      if (response.ok) {
-        setMembers(data.data);
-      }
-    } catch (error) {
-      console.error("Error fetching members:", error);
-    } finally {
-      setIsLoadingMembers(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === "members" || activeTab === "dashboard") {
-      fetchMembers();
-    }
-    if (activeTab === "check-in" || activeTab === "dashboard") {
-      fetchCheckins();
-    }
-  }, [activeTab]);
-
   const filteredMembers = members.filter((member) => {
     const fullName = `${member.first_name} ${member.last_name}`.toLowerCase();
     const searchLower = searchTerm.toLowerCase();
@@ -125,35 +125,25 @@ function App() {
 
   const validateForm = () => {
     const newErrors = {};
-
-    if (!newMember.firstName.trim()) {
+    if (!newMember.firstName.trim())
       newErrors.firstName = "First name is required.";
-    }
-    if (!newMember.lastName.trim()) {
+    if (!newMember.lastName.trim())
       newErrors.lastName = "Last name is required.";
-    }
-
     if (!newMember.email.trim()) {
       newErrors.email = "Email address is required.";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newMember.email)) {
       newErrors.email = "Please enter a valid email address.";
     }
-
     if (newMember.phone.trim() && !/^[0-9+\-\s()]+$/.test(newMember.phone)) {
       newErrors.phone = "Phone contains invalid characters.";
     }
-
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   };
 
   const handleAddMember = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setFormStatus({ type: "info", text: "Saving member..." });
 
@@ -192,13 +182,13 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-100 flex relative">
       {/* SIDEBAR NAVIGATION */}
-      <aside className="w-64 bg-white shadow-md z-10">
+      <aside className="w-64 bg-white shadow-md z-10 flex flex-col">
         <div className="p-6 flex items-center gap-3 text-blue-600 border-b border-gray-100">
           <Dumbbell className="w-8 h-8" />
           <h1 className="text-xl font-bold text-gray-800">Gym OS</h1>
         </div>
 
-        <nav className="mt-6 flex flex-col gap-2 px-4">
+        <nav className="mt-6 flex flex-col gap-2 px-4 flex-1">
           <button
             onClick={() => setActiveTab("dashboard")}
             className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "dashboard" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
@@ -222,12 +212,65 @@ function App() {
 
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 p-10 overflow-y-auto">
+        {/* DASHBOARD VIEW */}
+        {activeTab === "dashboard" && (
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-3xl font-bold text-gray-800 mb-8">
+              Business Overview
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div className="text-gray-500 text-sm font-medium mb-1">
+                  Total Members
+                </div>
+                <div className="text-3xl font-bold text-gray-800">
+                  {isLoadingMembers ? "..." : members.length}
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div className="text-gray-500 text-sm font-medium mb-1">
+                  Active Memberships
+                </div>
+                <div className="text-3xl font-bold text-green-600">
+                  {isLoadingMembers
+                    ? "..."
+                    : members.filter((m) => m.is_active).length}
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div className="text-gray-500 text-sm font-medium mb-1">
+                  System Status
+                </div>
+                <div className="text-xl font-bold text-blue-600 flex items-center gap-2 mt-1">
+                  <span className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span>
+                  Online & Connected
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center">
+              <LayoutDashboard className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-700">
+                Welcome to Gym OS
+              </h3>
+              <p className="text-gray-500 mt-2 max-w-md mx-auto">
+                Use the sidebar menu to scan member IDs at the front desk or
+                manage your client directory.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* CHECK-IN VIEW */}
         {activeTab === "check-in" && (
           <div className="max-w-2xl mx-auto">
             <h2 className="text-3xl font-bold text-gray-800 mb-6">
               Check-in System
             </h2>
+
             <div className="bg-white p-6 rounded-xl shadow-sm mb-8 border border-gray-100">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Scan or Enter Member ID
@@ -242,7 +285,7 @@ function App() {
                 />
                 <button
                   onClick={handleCheckIn}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
                 >
                   Process Entry
                 </button>
@@ -255,8 +298,10 @@ function App() {
                 </div>
               )}
             </div>
+
+            {/* Live Check-in Feed UI */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-betweem">
+              <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                 <h3 className="font-semibold text-gray-700 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-gray-500" />
                   Recent Check-ins
@@ -265,36 +310,33 @@ function App() {
                   Live
                 </span>
               </div>
+
               {isLoadingCheckins ? (
                 <div className="p-8 text-center text-gray-500">
                   Loading live feed...
                 </div>
               ) : recentCheckins.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
-                  No recent check-ins found today.
+                  No recent check-ins found.
                 </div>
               ) : (
                 <div className="divide-y divide-gray-50">
                   {recentCheckins.map((checkin) => {
-                    const memberInfo =
-                      member.find((m) => m.id === checkin.member_id) || checkin;
-                    const displayName = memberInfo.first_name
-                      ? `${memberInfo.first_name} ${memberInfo.last_name || ""}`
-                      : "Unknown Member";
-                    const initial = memberInfo.first_name
-                      ? memberInfo.first_name[0].toUpperCase()
+                    const displayName = `${checkin.first_name || "Unknown"} ${checkin.last_name || ""}`;
+                    const initial = checkin.first_name
+                      ? checkin.first_name[0].toUpperCase()
                       : "#";
                     const timeString = new Date(
-                      checkin.checkin_time,
-                    ).toLocaleDateString([], {
+                      checkin.check_in_time,
+                    ).toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
                     });
 
                     return (
                       <div
-                        key={checkin.id}
-                        className="p-4 flex items-center justify-betweenhover:bg-gray-50 transition-colors"
+                        key={checkin.checkin_id}
+                        className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                       >
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">
@@ -304,8 +346,8 @@ function App() {
                             <p className="font-medium text-gray-800">
                               {displayName}
                             </p>
-                            <p className="text-xs text-gray-400 font-mono mt-0.5">
-                              ID: {checkin.member_id.substring(0, 8)}...
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              Access Granted
                             </p>
                           </div>
                         </div>
@@ -418,11 +460,9 @@ function App() {
             >
               <X className="w-6 h-6" />
             </button>
-
             <h3 className="text-2xl font-bold text-gray-800 mb-6">
               Register New Member
             </h3>
-
             <form onSubmit={handleAddMember} className="space-y-4" noValidate>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -466,7 +506,6 @@ function App() {
                   )}
                 </div>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address *
@@ -484,7 +523,6 @@ function App() {
                   <p className="text-red-500 text-xs mt-1">{errors.email}</p>
                 )}
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Phone Number
@@ -502,7 +540,6 @@ function App() {
                   <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
                 )}
               </div>
-
               {formStatus && (
                 <div
                   className={`p-3 rounded-lg text-sm font-medium ${formStatus.type === "error" ? "bg-red-50 text-red-700" : "bg-blue-50 text-blue-700"}`}
@@ -510,7 +547,6 @@ function App() {
                   {formStatus.text}
                 </div>
               )}
-
               <div className="mt-8 flex gap-3">
                 <button
                   type="button"
