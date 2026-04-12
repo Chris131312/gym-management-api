@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Dumbbell,
-  Users,
-  Activity,
-  Search,
-  X,
-  LayoutDashboard,
-  Clock,
-} from "lucide-react";
+import { Search, X, Clock } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 
 function App() {
