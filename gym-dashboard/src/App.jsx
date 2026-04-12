@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Clock,
 } from "lucide-react";
+import Sidebar from "./components/Sidebar";
 
 function App() {
   //STATE
@@ -182,33 +183,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-100 flex relative">
       {/* SIDEBAR NAVIGATION */}
-      <aside className="w-64 bg-white shadow-md z-10 flex flex-col">
-        <div className="p-6 flex items-center gap-3 text-blue-600 border-b border-gray-100">
-          <Dumbbell className="w-8 h-8" />
-          <h1 className="text-xl font-bold text-gray-800">Gym OS</h1>
-        </div>
-
-        <nav className="mt-6 flex flex-col gap-2 px-4 flex-1">
-          <button
-            onClick={() => setActiveTab("dashboard")}
-            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "dashboard" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
-          >
-            <LayoutDashboard className="w-5 h-5" /> Overview
-          </button>
-          <button
-            onClick={() => setActiveTab("check-in")}
-            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "check-in" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
-          >
-            <Activity className="w-5 h-5" /> Check-in Scanner
-          </button>
-          <button
-            onClick={() => setActiveTab("members")}
-            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "members" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
-          >
-            <Users className="w-5 h-5" /> Members Directory
-          </button>
-        </nav>
-      </aside>
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 p-10 overflow-y-auto">
