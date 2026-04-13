@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Search, X, Clock } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
+import MemberModal from "./components/MemberModal";
 
 function App() {
   //STATE
@@ -22,16 +23,6 @@ function App() {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Form State
-  const [newMember, setNewMember] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-  });
-  const [formStatus, setFormStatus] = useState(null);
-  const [errors, setErrors] = useState({});
 
   const fetchCheckins = async () => {
     setIsLoadingCheckins(true);
@@ -368,127 +359,11 @@ function App() {
       </main>
 
       {/* THE MODAL OVERLAY */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
-            <button
-              onClick={() => {
-                setIsModalOpen(false);
-                setErrors({});
-              }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <h3 className="text-2xl font-bold text-gray-800 mb-6">
-              Register New Member
-            </h3>
-            <form onSubmit={handleAddMember} className="space-y-4" noValidate>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    First Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={newMember.firstName}
-                    onChange={(e) => {
-                      setNewMember({ ...newMember, firstName: e.target.value });
-                      if (errors.firstName)
-                        setErrors({ ...errors, firstName: null });
-                    }}
-                    className={`w-full border rounded-lg px-3 py-2 focus:ring-2 outline-none transition-colors ${errors.firstName ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}`}
-                  />
-                  {errors.firstName && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.firstName}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Last Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={newMember.lastName}
-                    onChange={(e) => {
-                      setNewMember({ ...newMember, lastName: e.target.value });
-                      if (errors.lastName)
-                        setErrors({ ...errors, lastName: null });
-                    }}
-                    className={`w-full border rounded-lg px-3 py-2 focus:ring-2 outline-none transition-colors ${errors.lastName ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}`}
-                  />
-                  {errors.lastName && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.lastName}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  value={newMember.email}
-                  onChange={(e) => {
-                    setNewMember({ ...newMember, email: e.target.value });
-                    if (errors.email) setErrors({ ...errors, email: null });
-                  }}
-                  className={`w-full border rounded-lg px-3 py-2 focus:ring-2 outline-none transition-colors ${errors.email ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}`}
-                />
-                {errors.email && (
-                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  value={newMember.phone}
-                  onChange={(e) => {
-                    setNewMember({ ...newMember, phone: e.target.value });
-                    if (errors.phone) setErrors({ ...errors, phone: null });
-                  }}
-                  className={`w-full border rounded-lg px-3 py-2 focus:ring-2 outline-none transition-colors ${errors.phone ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}`}
-                />
-                {errors.phone && (
-                  <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
-                )}
-              </div>
-              {formStatus && (
-                <div
-                  className={`p-3 rounded-lg text-sm font-medium ${formStatus.type === "error" ? "bg-red-50 text-red-700" : "bg-blue-50 text-blue-700"}`}
-                >
-                  {formStatus.text}
-                </div>
-              )}
-              <div className="mt-8 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    setErrors({});
-                  }}
-                  className="flex-1 bg-gray-100 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 text-white font-medium py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Save Member
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <MemberModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchMembers}
+      />
     </div>
   );
 }
