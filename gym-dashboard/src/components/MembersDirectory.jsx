@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import { Search, Trash2 } from "lucide-react";
 
 function MembersDirectory({
@@ -8,6 +9,7 @@ function MembersDirectory({
   onRefresh,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [memberToDelete, setMemberToDelete] = useState(null);
 
   const filteredMembers = members.filter((member) => {
     const fullName = `${member.first_name || ""} ${
@@ -20,23 +22,25 @@ function MembersDirectory({
     );
   });
 
-  const handleDelete = async (id) => {
-    const isConfirmed = window.confirm(
-      "Are you sure you want to delete this member?"
-    );
-    if (!isConfirmed) return;
+  const handleDelete = async () => {
+    if (!memberToDelete) return;
 
     try {
-      const response = await fetch(`http//localhost:3000/api/members/${id}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `http://localhost:3000/api/members/${memberToDelete}`,
+        {
+          method: "DELETE",
+        }
+      );
+
       if (response.ok) {
+        setMemberToDelete(null);
         onRefresh();
       } else {
         alert("Failed to delete member. Please try again.");
       }
     } catch (error) {
-      console.error("Network error while deleting.", error);
+      console.error("Network error while deleting:", error);
       alert("Cannot connect to server.");
     }
   };
@@ -79,7 +83,6 @@ function MembersDirectory({
                 <th className="p-4 font-semibold">Email</th>
                 <th className="p-4 font-semibold">Phone</th>
                 <th className="p-4 font-semibold">Status</th>
-                {/* Nueva columna para las acciones (los botones) */}
                 <th className="p-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
@@ -112,10 +115,9 @@ function MembersDirectory({
                         {member.is_active ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    {/* Celda con el botón de eliminar, alineado a la derecha */}
                     <td className="p-4 text-right">
                       <button
-                        onClick={() => handleDelete(member.id)}
+                        onClick={() => setMemberToDelete(member.id)}
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Delete Member"
                       >
@@ -129,6 +131,11 @@ function MembersDirectory({
           </table>
         )}
       </div>
+      <ConfirmDeleteModal
+        isOpen={memberToDelete !== null}
+        onClose={() => setMemberToDelete(null)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }
