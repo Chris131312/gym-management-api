@@ -1,7 +1,12 @@
 import React, { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 
-function MembersDirectory({ members, isLoadingMembers, onOpenModal }) {
+function MembersDirectory({
+  members,
+  isLoadingMembers,
+  onOpenModal,
+  onRefresh,
+}) {
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredMembers = members.filter((member) => {
@@ -14,6 +19,27 @@ function MembersDirectory({ members, isLoadingMembers, onOpenModal }) {
       (member.email && member.email.toLowerCase().includes(searchLower))
     );
   });
+
+  const handleDelete = async (id) => {
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete this member?"
+    );
+    if (!isConfirmed) return;
+
+    try {
+      const response = await fetch(`http//localhost:3000/api/members/${id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        onRefresh();
+      } else {
+        alert("Failed to delete member. Please try again.");
+      }
+    } catch (error) {
+      console.error("Network error while deleting.", error);
+      alert("Cannot connect to server.");
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -53,12 +79,14 @@ function MembersDirectory({ members, isLoadingMembers, onOpenModal }) {
                 <th className="p-4 font-semibold">Email</th>
                 <th className="p-4 font-semibold">Phone</th>
                 <th className="p-4 font-semibold">Status</th>
+                {/* Nueva columna para las acciones (los botones) */}
+                <th className="p-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="p-8 text-center text-gray-500">
+                  <td colSpan="5" className="p-8 text-center text-gray-500">
                     No members match your search.
                   </td>
                 </tr>
@@ -83,6 +111,16 @@ function MembersDirectory({ members, isLoadingMembers, onOpenModal }) {
                       >
                         {member.is_active ? "Active" : "Inactive"}
                       </span>
+                    </td>
+                    {/* Celda con el botón de eliminar, alineado a la derecha */}
+                    <td className="p-4 text-right">
+                      <button
+                        onClick={() => handleDelete(member.id)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete Member"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
                     </td>
                   </tr>
                 ))
