@@ -51,6 +51,7 @@ function App() {
             members={members}
             isLoadingMembers={isLoadingMembers}
             onOpenModal={() => setIsModalOpen(true)}
+            onRefresh={fetchMembers}
           />
         )}
       </main>
