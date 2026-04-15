@@ -11,6 +11,7 @@ function App() {
   const [members, setMembers] = useState([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [memberToEdit, setMemberToEdit] = useState(null);
 
   // fetch all members from backend
   const fetchMembers = async () => {
@@ -50,7 +51,14 @@ function App() {
           <MembersDirectory
             members={members}
             isLoadingMembers={isLoadingMembers}
-            onOpenModal={() => setIsModalOpen(true)}
+            onOpenModal={() => {
+              setMemberToEdit(null);
+              setIsModalOpen(true);
+            }}
+            onEditMember={(member) => {
+              setMemberToEdit(member);
+              setIsModalOpen(true);
+            }}
             onRefresh={fetchMembers}
           />
         )}
@@ -61,6 +69,7 @@ function App() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchMembers}
+        memberToEdit={memberToEdit}
       />
     </div>
   );

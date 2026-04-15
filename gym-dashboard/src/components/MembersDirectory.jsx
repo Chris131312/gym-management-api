@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
-import { Search, Trash2 } from "lucide-react";
+import { Search, Trash2, Edit } from "lucide-react";
 
 function MembersDirectory({
   members,
@@ -115,7 +115,14 @@ function MembersDirectory({
                         {member.is_active ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="p-4 text-right flex justify-end gap-2">
+                      <button
+                        onClick={() => onEditMember(member)}
+                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Edit Member"
+                      >
+                        <Edit className="w-5 h-5" />
+                      </button>
                       <button
                         onClick={() => setMemberToDelete(member.id)}
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
