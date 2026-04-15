@@ -205,6 +205,30 @@ app.get("/api/checkins", async (req, res) => {
   }
 });
 
+app.put("/api/members/:id", async (req, res) => {
+  const { id } = req.params;
+
+  const { first_name, last_name, email, phone_number, is_active } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE members SET first_name = $1, last_name = $2, phone_number = $4, is_active = $5 WHERE id = $6 RETURNING *`,
+      [first_name, last_name, email, phone_number, is_active, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Member not found" });
+    }
+
+    res.status(200).json({
+      message: "Member updated successfully",
+      member: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Error updating member:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.delete("/api/members/:id", async (req, res) => {
   const { id } = req.params;
 
