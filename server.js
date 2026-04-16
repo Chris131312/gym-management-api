@@ -115,26 +115,25 @@ app.post("/api/checkins", async (req, res) => {
   try {
     const { member_id } = req.body;
 
-    const membershipQuery = await pool.query(
-      "SELECT * FROM memberships WHERE member_id = $1 ORDER BY end_date DESC LIMIT 1",
+    const memberQuery = await pool.query(
+      "SELECT * FROM members WHERE id = $1",
       [member_id]
     );
 
-    if (membershipQuery.rows.length === 0) {
+    if (memberQuery.rows.length === 0) {
       return res.status(403).json({
         success: false,
-        error: "Access Denied. No membership record found for this member.",
+        error: "Access Denied. No member found with this ID.",
       });
     }
-    const membership = membershipQuery.rows[0];
 
-    const today = new Date();
-    const expirationDate = new Date(membership.end_date);
+    const member = memberQuery.rows[0];
 
-    if (expirationDate < today) {
+    if (member.is_active === false) {
       return res.status(403).json({
         success: false,
-        error: `Access Denied. Membership expired on ${expirationDate.toDateString()}. Please renew at the front desk.`,
+        error:
+          "Access Denied. Member account is inactive. Please visit the front desk.",
       });
     }
 
@@ -142,13 +141,14 @@ app.post("/api/checkins", async (req, res) => {
       "INSERT INTO check_ins (member_id) VALUES ($1) RETURNING *",
       [member_id]
     );
+
     res.status(201).json({
       success: true,
       message: "Access Granted! Have a great workout.",
       data: newCheckIn.rows[0],
     });
   } catch (error) {
-    console.error("Error processing check-in", error.message);
+    console.error("Error processing check-in:", error.message);
     res.status(500).json({ success: false, error: "Internal server error." });
   }
 });
