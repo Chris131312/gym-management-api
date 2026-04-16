@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
-function MemberModal({ isOpen, onClese, onSuccess, memberToEdit }) {
+function MemberModal({ isOpen, onClose, onSuccess, memberToEdit }) {
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",

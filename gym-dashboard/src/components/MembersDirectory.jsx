@@ -7,6 +7,7 @@ function MembersDirectory({
   isLoadingMembers,
   onOpenModal,
   onRefresh,
+  onEditMember,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [memberToDelete, setMemberToDelete] = useState(null);
