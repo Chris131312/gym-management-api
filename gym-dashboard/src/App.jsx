@@ -39,6 +39,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex relative">
+      <Toaster position="top-right" reverseOrder={false} />
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <main className="flex-1 p-10 overflow-y-auto">

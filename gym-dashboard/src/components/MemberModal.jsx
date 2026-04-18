@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import toast from "react-hot-toast";
 
 function MemberModal({ isOpen, onClose, onSuccess, memberToEdit }) {
   const [formData, setFormData] = useState({
@@ -62,21 +63,14 @@ function MemberModal({ isOpen, onClose, onSuccess, memberToEdit }) {
       const data = await response.json();
 
       if (response.ok) {
-        setFormStatus({
-          type: "success",
-          text: memberToEdit
-            ? "Member updated successfully!"
-            : "Member added successfully",
-        });
-        setTimeout(() => {
-          onSuccess();
-          onClose();
-        }, 1500);
+        toast.success(memberToEdit ? "Member updated!" : "Member created");
+        onSuccess();
+        onClose();
       } else {
-        setFormStatus({ type: "error", text: data.error || "Failed to save." });
+        toast.error(data.error || "Failed to save member.");
       }
     } catch (error) {
-      setFormStatus({ type: "error", text: "Server connection failed" });
+      toast.error("Server connection failed");
     }
   };
 
@@ -170,20 +164,6 @@ function MemberModal({ isOpen, onClose, onSuccess, memberToEdit }) {
                 Active Member Account
               </label>
             </div>
-
-            {formStatus && (
-              <div
-                className={`p-3 rounded-lg text-sm font-medium ${
-                  formStatus.type === "success"
-                    ? "bg-green-50 text-green-700"
-                    : formStatus.type === "error"
-                    ? "bg-red-50 text-red-700"
-                    : "bg-blue-50 text-blue-700"
-                }`}
-              >
-                {formStatus.text}
-              </div>
-            )}
 
             <div className="pt-4 flex gap-3">
               <button
