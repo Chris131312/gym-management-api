@@ -4,6 +4,7 @@ import Dashboard from "./components/Dashboard";
 import MemberModal from "./components/MemberModal";
 import CheckInScanner from "./components/CheckInScanner";
 import MembersDirectory from "./components/MembersDirectory";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   // global app state
