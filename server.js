@@ -250,6 +250,47 @@ app.delete("/api/members/:id", async (req, res) => {
   }
 });
 
+//GET MEMBERSHIPS
+app.get("/api/memberships/:member_id", async (req, res) => {
+  const { member_id } = req.params;
+
+  try {
+    const result = await pool.query(
+      "SELECT * FROM memberships WHERE member_id = $1 ORDER BY end_date DESC",
+      [member_id]
+    );
+
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error("Error fetching memberships:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+//POST MEMBERSHIPS
+app.post("/api/memberships", async (req, res) => {
+  const { member_id, plan_name, price, start_date, end_date } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO memberships (member_id, plan_name,price, start_date,end_date) VALUES ($1, $2, $3, $4) RETURNING *`,
+      [member_id, plan_name, price, start_date, end_date]
+    );
+
+    await pool.query("UPDATE members SET is_active = true WHERE id = $1", [
+      member_id,
+    ]);
+
+    res.status(201).json({
+      message: "Memberships added successfully",
+      membership: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Error creating membership:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is up and running on http://localhost:${PORT}`);
 });
