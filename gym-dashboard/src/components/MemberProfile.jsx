@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X, CreditCard, Calendar, Clock, CheckCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -7,4 +7,11 @@ function MemberProfile({ isOpen, onCLose, member, onMemberUpdated }) {
   const [showRenewForm, setShowRenewForm] = useState(false);
   const [planType, setPlanType] = useState("monthly");
   const [isLoading, setIsloading] = useState(false);
+
+  useEffect(()=>{
+    if (isOpen && member){
+      fetchMemberships()
+      setShowRenewForm(false)
+    }
+  }, [isOpen, member])
 }
