@@ -14,4 +14,19 @@ function MemberProfile({ isOpen, onCLose, member, onMemberUpdated }) {
       setShowRenewForm(false)
     }
   }, [isOpen, member])
+
+  const fetchMemberships = async () => {
+    setIsloading(true)
+    try{
+      const res = await fetch(`http://localhost:3000/api/memberships/${member.id}`)
+      if (res.ok){
+        const data = await res.json()
+        setMemberships(data)
+      }
+    } catch (error) {
+      toast.error("Failed to load payment history")
+    } finally {
+      setIsloading(false)
+    }
+  }
 }
