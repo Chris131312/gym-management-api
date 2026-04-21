@@ -8,25 +8,44 @@ function MemberProfile({ isOpen, onCLose, member, onMemberUpdated }) {
   const [planType, setPlanType] = useState("monthly");
   const [isLoading, setIsloading] = useState(false);
 
-  useEffect(()=>{
-    if (isOpen && member){
-      fetchMemberships()
-      setShowRenewForm(false)
+  useEffect(() => {
+    if (isOpen && member) {
+      fetchMemberships();
+      setShowRenewForm(false);
     }
-  }, [isOpen, member])
+  }, [isOpen, member]);
 
   const fetchMemberships = async () => {
-    setIsloading(true)
-    try{
-      const res = await fetch(`http://localhost:3000/api/memberships/${member.id}`)
-      if (res.ok){
-        const data = await res.json()
-        setMemberships(data)
+    setIsloading(true);
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/memberships/${member.id}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setMemberships(data);
       }
     } catch (error) {
-      toast.error("Failed to load payment history")
+      toast.error("Failed to load payment history");
     } finally {
-      setIsloading(false)
+      setIsloading(false);
     }
-  }
+  };
+
+  const handleRenew = async (e) => {
+    e.preventDefault();
+
+    const today = new Date();
+    const startDate = today.toISOString().split("T")[0];
+
+    let endDate = newDate();
+    let price = 0;
+    let planName = "";
+
+    if (planType === "monthly") {
+      endDate.setMonth(endDate.getMonth() + 1);
+      price = 30.0;
+      planName = "Monthly Plan";
+    }
+  };
 }
