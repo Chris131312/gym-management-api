@@ -4,6 +4,7 @@ import Dashboard from "./components/Dashboard";
 import MemberModal from "./components/MemberModal";
 import CheckInScanner from "./components/CheckInScanner";
 import MembersDirectory from "./components/MembersDirectory";
+import MemberProfile from "./components/MemberProfile";
 import { Toaster } from "react-hot-toast";
 
 function App() {
@@ -13,6 +14,8 @@ function App() {
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [memberToEdit, setMemberToEdit] = useState(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
 
   // fetch all members from backend
   const fetchMembers = async () => {
@@ -61,6 +64,10 @@ function App() {
               setMemberToEdit(member);
               setIsModalOpen(true);
             }}
+            onViewProfile={(member) => {
+              setSelectedMember(member);
+              setIsProfileOpen(true);
+            }}
             onRefresh={fetchMembers}
           />
         )}
@@ -72,6 +79,13 @@ function App() {
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchMembers}
         memberToEdit={memberToEdit}
+      />
+
+      <MemberProfile
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        member={selectedMember}
+        onMemberUpdated={fetchMembers}
       />
     </div>
   );

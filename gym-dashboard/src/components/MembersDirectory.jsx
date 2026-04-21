@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
-import { Search, Trash2, Edit } from "lucide-react";
+import { Search, Trash2, Edit, Eye } from "lucide-react";
 
 function MembersDirectory({
   members,
@@ -8,6 +8,7 @@ function MembersDirectory({
   onOpenModal,
   onRefresh,
   onEditMember,
+  onViewProfile,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [memberToDelete, setMemberToDelete] = useState(null);
@@ -123,6 +124,13 @@ function MembersDirectory({
                         title="Edit Member"
                       >
                         <Edit className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => onViewProfile(member)}
+                        className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        title="View Profile"
+                      >
+                        <Eye className="w-5 h-5" />
                       </button>
                       <button
                         onClick={() => setMemberToDelete(member.id)}
