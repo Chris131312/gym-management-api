@@ -19,7 +19,7 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated }) {
     setIsloading(true);
     try {
       const res = await fetch(
-        `http://localhost:3000/api/memberships/${member.id}`
+        `http://localhost:3000/api/memberships/${member.id}`,
       );
       if (res.ok) {
         const data = await res.json();
@@ -38,7 +38,7 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated }) {
     const today = new Date();
     const startDate = today.toISOString().split("T")[0];
 
-    let endDate = newDate();
+    let endDate = new Date();
     let price = 0;
     let planName = "";
 
@@ -73,7 +73,7 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated }) {
         fetchMemberships();
         onMemberUpdated();
       } else {
-        toast.error("Failed to process rnewal");
+        toast.error("Failed to process renewal");
       }
     } catch (error) {
       toast.error("Server connection failed");
