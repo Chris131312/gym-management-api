@@ -8,7 +8,7 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-//HEALTH CHECK
+// HEALTH CHECK
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -16,13 +16,13 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-//CREATE MEMBER
+// CREATE MEMBER
 app.post("/api/members", async (req, res) => {
   try {
     const { first_name, last_name, email, phone_number } = req.body;
     const newMember = await pool.query(
       "INSERT INTO members (first_name, last_name, email, phone_number) VALUES ($1, $2, $3, $4) RETURNING *",
-      [first_name, last_name, email, phone_number]
+      [first_name, last_name, email, phone_number],
     );
     res.status(201).json({
       success: true,
@@ -35,11 +35,11 @@ app.post("/api/members", async (req, res) => {
   }
 });
 
-//READ ALL MEMBERS
+// READ ALL MEMBERS
 app.get("/api/members", async (req, res) => {
   try {
     const allMembers = await pool.query(
-      "SELECT * FROM members ORDER BY created_at DESC"
+      "SELECT * FROM members ORDER BY created_at DESC",
     );
     res.status(200).json({
       success: true,
@@ -52,7 +52,7 @@ app.get("/api/members", async (req, res) => {
   }
 });
 
-//UPDATE MEMBER
+// UPDATE MEMBER
 app.put("/api/members/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -60,7 +60,7 @@ app.put("/api/members/:id", async (req, res) => {
 
     const updatedMember = await pool.query(
       "UPDATE members SET first_name = $1, last_name = $2, email = $3, phone_number = $4, is_active = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING *",
-      [first_name, last_name, email, phone_number, is_active, id]
+      [first_name, last_name, email, phone_number, is_active, id],
     );
 
     if (updatedMember.rows.length === 0) {
@@ -80,22 +80,23 @@ app.put("/api/members/:id", async (req, res) => {
   }
 });
 
-//DELETE MEMBER
+// DELETE MEMBER
 app.delete("/api/members/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
     const deleteMember = await pool.query(
       "DELETE FROM members WHERE id = $1 RETURNING *",
-      [id]
+      [id],
     );
 
-    if (deleteMember.rowCount.length === 0) {
+    if (deleteMember.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: " Member not found. They might have been deleted already.",
+        message: "Member not found. They might have been deleted already.",
       });
     }
+
     res.status(200).json({
       success: true,
       message: "Member deleted successfully!",
@@ -103,21 +104,18 @@ app.delete("/api/members/:id", async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting member:", error.message);
-    res.status(500).json({
-      success: false,
-      error: "Internal server error.",
-    });
+    res.status(500).json({ success: false, error: "Internal server error." });
   }
 });
 
-//Register Check-in
+// REGISTER CHECK-IN
 app.post("/api/checkins", async (req, res) => {
   try {
     const { member_id } = req.body;
 
     const memberQuery = await pool.query(
       "SELECT * FROM members WHERE id = $1",
-      [member_id]
+      [member_id],
     );
 
     if (memberQuery.rows.length === 0) {
@@ -139,7 +137,7 @@ app.post("/api/checkins", async (req, res) => {
 
     const newCheckIn = await pool.query(
       "INSERT INTO check_ins (member_id) VALUES ($1) RETURNING *",
-      [member_id]
+      [member_id],
     );
 
     res.status(201).json({
@@ -153,40 +151,15 @@ app.post("/api/checkins", async (req, res) => {
   }
 });
 
-//SELL MEMBERSHIPS
-app.post("/api/memberships", async (req, res) => {
-  try {
-    const { member_id, plan_name, price, duration_in_days } = req.body;
-
-    const newMembership = await pool.query(
-      `
-      INSERT INTO memberships (member_id, plan_name, price, end_date) 
-            VALUES ($1, $2, $3, CURRENT_DATE + $4 * INTERVAL '1 day') 
-            RETURNING *
-      `,
-      [member_id, plan_name, price, duration_in_days]
-    );
-
-    res.status(201).json({
-      success: true,
-      message: "Membership activated successfully!",
-      data: newMembership.rows[0],
-    });
-  } catch (error) {
-    console.error("Error selling membership:", error.message);
-    res.status(500).json({ success: false, error: "Internal server error." });
-  }
-});
-
-//Read Check-In with member info
+// READ CHECK-INS WITH MEMBER INFO
 app.get("/api/checkins", async (req, res) => {
   try {
     const query = `
     SELECT
-    check_ins.id AS checkin_id,
-    check_ins.check_in_time,
-    members.first_name,
-    members.last_name
+      check_ins.id AS checkin_id,
+      check_ins.check_in_time,
+      members.first_name,
+      members.last_name
     FROM check_ins
     INNER JOIN members ON check_ins.member_id = members.id
     ORDER BY check_ins.check_in_time DESC;
@@ -205,76 +178,31 @@ app.get("/api/checkins", async (req, res) => {
   }
 });
 
-app.put("/api/members/:id", async (req, res) => {
-  const { id } = req.params;
-
-  const { first_name, last_name, email, phone_number, is_active } = req.body;
-
-  try {
-    const result = await pool.query(
-      `UPDATE members SET first_name = $1, last_name = $2, phone_number = $4, is_active = $5 WHERE id = $6 RETURNING *`,
-      [first_name, last_name, email, phone_number, is_active, id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Member not found" });
-    }
-
-    res.status(200).json({
-      message: "Member updated successfully",
-      member: result.rows[0],
-    });
-  } catch (error) {
-    console.error("Error updating member:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-app.delete("/api/members/:id", async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const result = await pool.query(
-      "DELETE FROM members WHERE id = $1 RETURNING *",
-      [id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Member not found" });
-    }
-    res.status(200).json({
-      message: "Member deleted succesfully",
-      deleteMember: result.rows[0],
-    });
-  } catch (error) {
-    console.error("Error deleting member:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-//GET MEMBERSHIPS
+// GET MEMBERSHIPS BY MEMBER ID
 app.get("/api/memberships/:member_id", async (req, res) => {
   const { member_id } = req.params;
 
   try {
     const result = await pool.query(
       "SELECT * FROM memberships WHERE member_id = $1 ORDER BY end_date DESC",
-      [member_id]
+      [member_id],
     );
 
     res.status(200).json(result.rows);
   } catch (error) {
-    console.error("Error fetching memberships:", error);
+    console.error("Error fetching memberships:", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-//POST MEMBERSHIPS
+// POST (SELL/RENEW) MEMBERSHIP
 app.post("/api/memberships", async (req, res) => {
   const { member_id, plan_name, price, start_date, end_date } = req.body;
 
   try {
     const result = await pool.query(
-      `INSERT INTO memberships (member_id, plan_name,price, start_date,end_date) VALUES ($1, $2, $3, $4) RETURNING *`,
-      [member_id, plan_name, price, start_date, end_date]
+      `INSERT INTO memberships (member_id, plan_name, price, start_date, end_date) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [member_id, plan_name, price, start_date, end_date],
     );
 
     await pool.query("UPDATE members SET is_active = true WHERE id = $1", [
@@ -282,11 +210,11 @@ app.post("/api/memberships", async (req, res) => {
     ]);
 
     res.status(201).json({
-      message: "Memberships added successfully",
+      message: "Membership added successfully",
       membership: result.rows[0],
     });
   } catch (error) {
-    console.error("Error creating membership:", error);
+    console.error("Error creating membership:", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 });
