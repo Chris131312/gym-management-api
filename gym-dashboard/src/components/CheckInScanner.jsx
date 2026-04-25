@@ -10,15 +10,9 @@ function CheckInScanner() {
   const inputRef = useRef(null);
 
   useEffect(() => {
-    const enforceFocus = () => {
-      if (scanStatus === "idle" && inputRef.current) {
-        inputRef.current.focus();
-      }
-    };
-    document.addEventListener("click", enforceFocus);
-    enforceFocus();
-
-    return () => document.removeEventListener("click", enforceFocus);
+    if (scanStatus === "idle" && inputRef.current) {
+      inputRef.current.focus();
+    }
   }, [scanStatus]);
 
   const handleScan = async (e) => {
@@ -59,17 +53,6 @@ function CheckInScanner() {
   };
   return (
     <div className="h-full w-full flex items-center justify-center p-8 animate-fade-in">
-      <form onSubmit={handleScan} className="absolute opacity-0">
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          autoFocus
-        />
-        <button type="submit">Scan</button>
-      </form>
-
       {scanStatus === "idle" && (
         <div className="text-center max-w-lg w-full bg-white p-12 rounded-3xl shadow-lg border border-gray-100 flex flex-col items-center">
           <div className="bg-blue-50 p-8 rounded-full mb-8 animate-pulse">
@@ -78,9 +61,27 @@ function CheckInScanner() {
           <h2 className="text-4xl font-bold text-gray-800 mb-4">
             Ready to Scan
           </h2>
-          <p className="text-gray-500 text-lg">
-            Please scan your membership card or enter your ID code.
+          <p className="text-gray-500 text-lg mb-8">
+            Please scan your membership card or enter your ID code manually.
           </p>
+
+          <form onSubmit={handleScan} className="w-full">
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Paste or type Member ID here..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="w-full text-center p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 outline-none transition-colors text-gray-700 font-mono mb-4"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="w-full bg-gray-800 hover:bg-gray-900 text-white font-medium py-3 rounded-xl transition-colors"
+            >
+              Verify Access
+            </button>
+          </form>
         </div>
       )}
 
