@@ -38,12 +38,24 @@ app.post("/api/members", async (req, res) => {
 // READ ALL MEMBERS
 app.get("/api/members", async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const countResult = await pool.query("SELECT COUNT(*) FROM members");
+    const totalMembers = parseInt(countResult.rows[0].count);
+
     const allMembers = await pool.query(
-      "SELECT * FROM members ORDER BY created_at DESC",
+      "SELECT * FROM members ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+      [limit, offset],
     );
+
     res.status(200).json({
       success: true,
-      count: allMembers.rowCount,
+      limit: limit,
+      page: page,
+      totalMembers: totalMembers,
+      totalPages: Math.ceil(totalMembers / limit),
       data: allMembers.rows,
     });
   } catch (error) {
