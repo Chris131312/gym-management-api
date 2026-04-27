@@ -22,7 +22,23 @@ function MembersDirectory({
   const [isLoadingMembers, setIsLoadingMembers] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const limit = 10
+  const limit = 10;
+
+  const fetchPaginatedMembers = async () => {
+    setIsLoadingMembers(true)
+    try{
+      const response = await fetch(`http://localhost:3000/api/members?page=${currentPage}&limit=${limit}`)
+      if (response.ok){
+        const result = await response.json()
+        setMembers(result.data || [])
+        setTotalPages(result.totalPages || 1)
+      }
+    } catch (error){
+      console.error("Error fetching members:", error)
+    } finally {
+      setIsLoadingMembers(false)
+    }
+  }
 
   const filteredMembers = members.filter((member) => {
     const fullName = `${member.first_name || ""} ${
