@@ -1,10 +1,15 @@
 import React, { useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
-import { Search, Trash2, Edit, Eye } from "lucide-react";
+import {
+  Search,
+  Trash2,
+  Edit,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 function MembersDirectory({
-  members,
-  isLoadingMembers,
   onOpenModal,
   onRefresh,
   onEditMember,
@@ -12,6 +17,12 @@ function MembersDirectory({
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [memberToDelete, setMemberToDelete] = useState(null);
+
+  const [members, setMembers] = useState([]);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10
 
   const filteredMembers = members.filter((member) => {
     const fullName = `${member.first_name || ""} ${
@@ -32,7 +43,7 @@ function MembersDirectory({
         `http://localhost:3000/api/members/${memberToDelete}`,
         {
           method: "DELETE",
-        }
+        },
       );
 
       if (response.ok) {
