@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import {
   Search,
@@ -25,20 +25,30 @@ function MembersDirectory({
   const limit = 10;
 
   const fetchPaginatedMembers = async () => {
-    setIsLoadingMembers(true)
-    try{
-      const response = await fetch(`http://localhost:3000/api/members?page=${currentPage}&limit=${limit}`)
-      if (response.ok){
-        const result = await response.json()
-        setMembers(result.data || [])
-        setTotalPages(result.totalPages || 1)
+    setIsLoadingMembers(true);
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/members?page=${currentPage}&limit=${limit}`,
+      );
+      if (response.ok) {
+        const result = await response.json();
+        setMembers(result.data || []);
+        setTotalPages(result.totalPages || 1);
       }
-    } catch (error){
-      console.error("Error fetching members:", error)
+    } catch (error) {
+      console.error("Error fetching members:", error);
     } finally {
-      setIsLoadingMembers(false)
+      setIsLoadingMembers(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    fetchPaginatedMembers()
+  }, [currentPage])
+
+  useEffect(() => {
+    fetchPaginatedMembers()
+  }, [currentPage])
 
   const filteredMembers = members.filter((member) => {
     const fullName = `${member.first_name || ""} ${
