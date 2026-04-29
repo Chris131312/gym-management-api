@@ -54,8 +54,6 @@ function App() {
 
         {activeTab === "members" && (
           <MembersDirectory
-            members={members}
-            isLoadingMembers={isLoadingMembers}
             onOpenModal={() => {
               setMemberToEdit(null);
               setIsModalOpen(true);
@@ -68,12 +66,11 @@ function App() {
               setSelectedMember(member);
               setIsProfileOpen(true);
             }}
-            onRefresh={fetchMembers}
+            onRefresh={isModalOpen} 
           />
         )}
       </main>
 
-      {/* hidden by default, toggled from directory */}
       <MemberModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
