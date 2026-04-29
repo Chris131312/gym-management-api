@@ -1,34 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
-import {
-  Search,
-  Trash2,
-  Edit,
-  Eye,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Search, Trash2, Edit, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import toast from 'react-hot-toast'; 
 
 function MembersDirectory({
+  
   onOpenModal,
-  onRefresh,
+  onRefresh, 
   onEditMember,
   onViewProfile,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [memberToDelete, setMemberToDelete] = useState(null);
-
+  
   const [members, setMembers] = useState([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const limit = 10;
+  const limit = 10; 
 
   const fetchPaginatedMembers = async () => {
     setIsLoadingMembers(true);
     try {
       const response = await fetch(
-        `http://localhost:3000/api/members?page=${currentPage}&limit=${limit}`,
+        `http://localhost:3000/api/members?page=${currentPage}&limit=${limit}`
       );
       if (response.ok) {
         const result = await response.json();
@@ -43,12 +38,13 @@ function MembersDirectory({
   };
 
   useEffect(() => {
-    fetchPaginatedMembers()
-  }, [currentPage])
+    fetchPaginatedMembers();
+  }, [currentPage]);
 
   useEffect(() => {
-    fetchPaginatedMembers()
-  }, [currentPage])
+    fetchPaginatedMembers();
+  }, [onRefresh]);
+
 
   const filteredMembers = members.filter((member) => {
     const fullName = `${member.first_name || ""} ${
@@ -69,12 +65,12 @@ function MembersDirectory({
         `http://localhost:3000/api/members/${memberToDelete}`,
         {
           method: "DELETE",
-        },
+        }
       );
 
       if (response.ok) {
         setMemberToDelete(null);
-        onRefresh();
+        fetchPaginatedMembers(); 
       } else {
         alert("Failed to delete member. Please try again.");
       }
@@ -82,6 +78,15 @@ function MembersDirectory({
       console.error("Network error while deleting:", error);
       alert("Cannot connect to server.");
     }
+  };
+
+  // --- CONTROLES DE PAGINACIÓN ---
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(prev => prev - 1);
   };
 
   return (
@@ -115,75 +120,102 @@ function MembersDirectory({
             Loading members from database...
           </div>
         ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100 text-gray-600 text-sm">
-                <th className="p-4 font-semibold">Name</th>
-                <th className="p-4 font-semibold">Email</th>
-                <th className="p-4 font-semibold">Phone</th>
-                <th className="p-4 font-semibold">Status</th>
-                <th className="p-4 font-semibold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredMembers.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="p-8 text-center text-gray-500">
-                    No members match your search.
-                  </td>
+          <>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100 text-gray-600 text-sm">
+                  <th className="p-4 font-semibold">Name</th>
+                  <th className="p-4 font-semibold">Email</th>
+                  <th className="p-4 font-semibold">Phone</th>
+                  <th className="p-4 font-semibold">Status</th>
+                  <th className="p-4 font-semibold text-right">Actions</th>
                 </tr>
-              ) : (
-                filteredMembers.map((member) => (
-                  <tr
-                    key={member.id}
-                    className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="p-4 font-medium text-gray-800">
-                      {member.first_name} {member.last_name}
-                    </td>
-                    <td className="p-4 text-gray-600">{member.email}</td>
-                    <td className="p-4 text-gray-600">{member.phone_number}</td>
-                    <td className="p-4">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          member.is_active
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {member.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right flex justify-end gap-2">
-                      <button
-                        onClick={() => onEditMember(member)}
-                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Edit Member"
-                      >
-                        <Edit className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => onViewProfile(member)}
-                        className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title="View Profile"
-                      >
-                        <Eye className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => setMemberToDelete(member.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete Member"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+              </thead>
+              <tbody>
+                {filteredMembers.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="p-8 text-center text-gray-500">
+                      No members match your search.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredMembers.map((member) => (
+                    <tr
+                      key={member.id}
+                      className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="p-4 font-medium text-gray-800">
+                        {member.first_name} {member.last_name}
+                      </td>
+                      <td className="p-4 text-gray-600">{member.email}</td>
+                      <td className="p-4 text-gray-600">{member.phone_number}</td>
+                      <td className="p-4">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            member.is_active
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {member.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right flex justify-end gap-2">
+                        <button
+                          onClick={() => onEditMember(member)}
+                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Edit Member"
+                        >
+                          <Edit className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => onViewProfile(member)}
+                          className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          title="View Profile"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => setMemberToDelete(member.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete Member"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+
+            {members.length > 0 && (
+              <div className="flex items-center justify-between border-t border-gray-100 p-4 bg-gray-50/50">
+                <p className="text-sm text-gray-500">
+                  Page <span className="font-semibold text-gray-900">{currentPage}</span> of <span className="font-semibold text-gray-900">{totalPages}</span>
+                </p>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={handlePrevPage} 
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-white shadow-sm"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={handleNextPage} 
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-white shadow-sm"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
+
       <ConfirmDeleteModal
         isOpen={memberToDelete !== null}
         onClose={() => setMemberToDelete(null)}
