@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
-import { Search, Trash2, Edit, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Trash2, Edit, Eye, ChevronLeft, ChevronRight, User } from "lucide-react";
 import toast from 'react-hot-toast'; 
 
 function MembersDirectory({
