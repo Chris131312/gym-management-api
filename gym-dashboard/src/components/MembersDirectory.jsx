@@ -80,7 +80,6 @@ function MembersDirectory({
     }
   };
 
-  // --- CONTROLES DE PAGINACIÓN ---
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
   };
@@ -90,7 +89,7 @@ function MembersDirectory({
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto animate-fade-in">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold text-gray-800">Members Directory</h2>
         <button
@@ -115,104 +114,134 @@ function MembersDirectory({
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {isLoadingMembers ? (
-          <div className="p-8 text-center text-gray-500">
-            Loading members from database...
-          </div>
-        ) : (
-          <>
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100 text-gray-600 text-sm">
-                  <th className="p-4 font-semibold">Name</th>
-                  <th className="p-4 font-semibold">Email</th>
-                  <th className="p-4 font-semibold">Phone</th>
-                  <th className="p-4 font-semibold">Status</th>
-                  <th className="p-4 font-semibold text-right">Actions</th>
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-gray-50 border-b border-gray-100 text-gray-600 text-sm">
+              <th className="p-4 font-semibold w-1/4">Name</th>
+              <th className="p-4 font-semibold w-1/4">Email</th>
+              <th className="p-4 font-semibold w-1/5">Phone</th>
+              <th className="p-4 font-semibold w-[15%]">Status</th>
+              <th className="p-4 font-semibold text-right w-[15%]">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoadingMembers ? (
+              [...Array(5)].map((_, index) => (
+                <tr key={index} className="border-b border-gray-50 animate-pulse">
+                  <td className="p-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div></td>
+                  <td className="p-4"><div className="h-4 bg-gray-200 rounded w-full"></div></td>
+                  <td className="p-4"><div className="h-4 bg-gray-200 rounded w-2/3"></div></td>
+                  <td className="p-4"><div className="h-6 bg-gray-200 rounded-full w-16"></div></td>
+                  <td className="p-4 flex justify-end gap-2">
+                    <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
+                    <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
+                    <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredMembers.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="p-8 text-center text-gray-500">
-                      No members match your search.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredMembers.map((member) => (
-                    <tr
-                      key={member.id}
-                      className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+              ))
+            ) : filteredMembers.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="p-16 text-center">
+                  <div className="flex flex-col items-center justify-center animate-fade-in">
+                    {searchTerm ? (
+                      <>
+                        <div className="bg-gray-100 p-4 rounded-full mb-4">
+                          <Search className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-800 mb-2">No matches found</h3>
+                        <p className="text-gray-500">We couldn't find any member matching "{searchTerm}"</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="bg-blue-50 p-4 rounded-full mb-4">
+                          <Users className="w-8 h-8 text-blue-500" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-800 mb-2">No members yet</h3>
+                        <p className="text-gray-500 mb-6">Get started by adding your first gym member to the directory.</p>
+                        <button 
+                          onClick={onOpenModal}
+                          className="bg-white border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 px-5 py-2.5 rounded-lg transition-colors shadow-sm"
+                        >
+                          Add New Member
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              filteredMembers.map((member) => (
+                <tr
+                  key={member.id}
+                  className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                >
+                  <td className="p-4 font-medium text-gray-800">
+                    {member.first_name} {member.last_name}
+                  </td>
+                  <td className="p-4 text-gray-600">{member.email}</td>
+                  <td className="p-4 text-gray-600">{member.phone_number}</td>
+                  <td className="p-4">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        member.is_active
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
                     >
-                      <td className="p-4 font-medium text-gray-800">
-                        {member.first_name} {member.last_name}
-                      </td>
-                      <td className="p-4 text-gray-600">{member.email}</td>
-                      <td className="p-4 text-gray-600">{member.phone_number}</td>
-                      <td className="p-4">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            member.is_active
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {member.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right flex justify-end gap-2">
-                        <button
-                          onClick={() => onEditMember(member)}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Edit Member"
-                        >
-                          <Edit className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => onViewProfile(member)}
-                          className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          title="View Profile"
-                        >
-                          <Eye className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => setMemberToDelete(member.id)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete Member"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-
-            {members.length > 0 && (
-              <div className="flex items-center justify-between border-t border-gray-100 p-4 bg-gray-50/50">
-                <p className="text-sm text-gray-500">
-                  Page <span className="font-semibold text-gray-900">{currentPage}</span> of <span className="font-semibold text-gray-900">{totalPages}</span>
-                </p>
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={handlePrevPage} 
-                    disabled={currentPage === 1}
-                    className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-white shadow-sm"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={handleNextPage} 
-                    disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-white shadow-sm"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+                      {member.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  <td className="p-4 text-right flex justify-end gap-2">
+                    <button
+                      onClick={() => onEditMember(member)}
+                      className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Edit Member"
+                    >
+                      <Edit className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => onViewProfile(member)}
+                      className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                      title="View Profile"
+                    >
+                      <Eye className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setMemberToDelete(member.id)}
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete Member"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </td>
+                </tr>
+              ))
             )}
-          </>
+          </tbody>
+        </table>
+
+        {!isLoadingMembers && members.length > 0 && (
+          <div className="flex items-center justify-between border-t border-gray-100 p-4 bg-gray-50/50">
+            <p className="text-sm text-gray-500">
+              Page <span className="font-semibold text-gray-900">{currentPage}</span> of <span className="font-semibold text-gray-900">{totalPages}</span>
+            </p>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={handlePrevPage} 
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-white shadow-sm"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={handleNextPage} 
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-white shadow-sm"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
