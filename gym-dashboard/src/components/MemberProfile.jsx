@@ -101,55 +101,49 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated }) {
     };
   }, [selectedPlan]);
 
-  const handleRenew = async (e) => {
-    e.preventDefault();
+  const handleConfirmPayment = async () => {
+    setStep("processing");
 
-    const today = new Date();
-    const startDate = today.toISOString().split("T")[0];
-
-    let endDate = new Date();
-    let price = 0;
-    let planName = "";
-
-    if (planType === "monthly") {
-      endDate.setMonth(endDate.getMonth() + 1);
-      price = 30.0;
-      planName = "Monthly Plan";
-    } else {
-      endDate.setFullYear(endDate.getFullYear() + 1);
-      price = 300.0;
-      planName = "Annual Plan";
-    }
-
-    const newMembership = {
+    const plan = PLANS[selectedPlan];
+    const payload = {
       member_id: member.id,
-      plan_name: planName,
-      price: price,
-      start_date: startDate,
-      end_date: endDate.toISOString().split("T")[0],
+      plan_name: plan.name,
+      price: plan.price,
+      start_date: newPlanDates.startDateISO,
+      end_date: newPlanDates.endDateISO,
     };
 
     try {
       const res = await fetch("http://localhost:3000/api/memberships", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newMembership),
+        body: JSON.stringify(payload),
       });
-
       if (res.ok) {
-        toast.success("Memberships renewed successfully");
-        setShowRenewForm(false);
-        fetchMemberships();
+        toast.success(`Payment of $${plan.price} processed successfully`);
+        await fetchMemberships();
+        setStep("idle");
         onMemberUpdated();
       } else {
-        toast.error("Failed to process renewal");
+        toast.error("Failed to process payment");
+        setStep("confirm");
       }
     } catch (error) {
       toast.error("Server connection failed");
+      setStep("confirm");
     }
   };
 
   if (!isOpen || !member) return null;
+
+  const formatDate = (date) =>
+    new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+
+  const formatCurrency = (amount) => `$${parseFloat(amount).toFixed(2)}`;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -160,109 +154,311 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated }) {
 
       <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-slide-in-right">
         <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-start">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-2xl font-bold text-gray-800 truncate">
               {member.first_name} {member.last_name}
-              {member.is_active && (
-                <CheckCircle className="w-5 h-5 text-green-500" />
-              )}
             </h2>
-            <p className="text-gray-500 text-sm mt-1">{member.email}</p>
+            <p className="text-gray-500 text-sm mt-1 truncate">
+              {member.email}
+            </p>
             <p className="text-gray-500 text-sm">{member.phone_number}</p>
+
+            <div className="mt-3">
+              <MembershipBadge status={membershipStatus} />
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:bg-gray-200 rounded-full transition-colors"
+            className="p-2 text-gray-400 hover:bg-gray-200 rounded-full transition-colors flex-shrink-0"
+            aria-label="Close panel"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          {!showRenewForm ? (
+          {step === "idle" && (
             <button
-              onClick={() => setShowRenewForm(true)}
+              onClick={() => setStep("select")}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl flex justify-center items-center gap-2 transition-colors mb-8 shadow-sm"
             >
               <CreditCard className="w-5 h-5" />
-              Renew Membership
+              {membershipStatus.isActive
+                ? "Renew Membership"
+                : "Sell Membership"}
             </button>
-          ) : (
-            <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-8">
-              <h3 className="font-semibold text-blue-900 mb-3">Select Plan</h3>
-              <form onSubmit={handleRenew}>
-                <select
-                  value={planType}
-                  onChange={(e) => setPlanType(e.target.value)}
-                  className="w-full mb-3 p-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                >
-                  <option value="monthly">Monthly Plan ($30.00)</option>
-                  <option value="annual">Annual Plan ($300.00)</option>
-                </select>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowRenewForm(false)}
-                    className="flex-1 py-2 bg-white text-gray-600 rounded-lg border border-gray-200 font-medium"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-medium"
-                  >
-                    Process
-                  </button>
-                </div>
-              </form>
+          )}
+
+          {step === "select" && (
+            <PlanSelector
+              selectedPlan={selectedPlan}
+              onSelectPlan={setSelectedPlan}
+              onCancel={() => setStep("idle")}
+              onContinue={() => setStep("confirm")}
+            />
+          )}
+
+          {step === "confirm" && (
+            <PaymentSummary
+              plan={PLANS[selectedPlan]}
+              dates={newPlanDates}
+              formatDate={formatDate}
+              formatCurrency={formatCurrency}
+              onBack={() => setStep("select")}
+              onConfirm={handleConfirmPayment}
+            />
+          )}
+
+          {step === "processing" && (
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-8 mb-8 flex flex-col items-center">
+              <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-3" />
+              <p className="text-blue-900 font-medium">Processing payment...</p>
+              <p className="text-blue-700 text-sm mt-1">
+                Please don't close this window
+              </p>
             </div>
           )}
 
-          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-gray-400" />
-            Payment History
-          </h3>
-
-          {isLoading ? (
-            <p className="text-gray-500 text-sm">Loading records...</p>
-          ) : memberships.length === 0 ? (
-            <div className="text-center p-6 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-              <p className="text-gray-500">No payment history found.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {memberships.map((plan) => (
-                <div
-                  key={plan.id}
-                  className="border border-gray-100 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="font-semibold text-gray-800">
-                      {plan.plan_name}
-                    </span>
-                    <span className="font-bold text-green-600">
-                      ${parseFloat(plan.price).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500 mt-2">
-                    <Calendar className="w-3 h-3" />
-                    <span>
-                      Starts: {new Date(plan.start_date).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-                    <Clock className="w-3 h-3 text-red-400" />
-                    <span>
-                      Expires: {new Date(plan.end_date).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <PaymentHistory
+            memberships={memberships}
+            isLoading={isLoading}
+            membershipStatus={membershipStatus}
+            formatDate={formatDate}
+            formatCurrency={formatCurrency}
+          />
         </div>
       </div>
     </div>
+  );
+}
+
+function MembershipBadge({ status }) {
+  if (!status.activeMembership) {
+    return (
+      <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-1 rounded-full">
+        <AlertCircle className="w-3 h-3" />
+        No active membership
+      </span>
+    );
+  }
+
+  if (!status.isActive) {
+    return (
+      <span className="inline-flex items-center gap-1.5 bg-red-100 text-red-700 text-xs font-medium px-2.5 py-1 rounded-full">
+        <AlertCircle className="w-3 h-3" />
+        Expired {Math.abs(status.daysRemaining)} days ago
+      </span>
+    );
+  }
+
+  if (status.daysRemaining <= 7) {
+    return (
+      <span className="inline-flex items-center gap-1.5 bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-1 rounded-full">
+        <AlertCircle className="w-3 h-3" />
+        Expires in {status.daysRemaining} days
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1.5 bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full">
+      <CheckCircle className="w-3 h-3" />
+      Active · Expires in {status.daysRemaining} days
+    </span>
+  );
+}
+
+function PlanSelector({ selectedPlan, onSelectPlan, onCancel, onContinue }) {
+  return (
+    <div className="mb-8">
+      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+        Choose plan
+      </h3>
+
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        {Object.values(PLANS).map((plan) => {
+          const isSelected = selectedPlan === plan.id;
+          return (
+            <button
+              key={plan.id}
+              type="button"
+              onClick={() => onSelectPlan(plan.id)}
+              className={`relative text-left p-4 rounded-xl border-2 transition-all ${
+                isSelected
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-200 bg-white hover:border-gray-300"
+              }`}
+            >
+              {plan.badge && (
+                <span className="absolute -top-2 right-3 bg-blue-600 text-white text-xs font-medium px-2 py-0.5 rounded-md">
+                  {plan.badge}
+                </span>
+              )}
+              <p className="text-xs text-gray-500 capitalize mb-1">
+                {plan.period}ly
+              </p>
+              <div className="flex items-baseline gap-1 mb-2">
+                <span className="text-2xl font-bold text-gray-800">
+                  ${plan.price}
+                </span>
+                <span className="text-xs text-gray-500">/ {plan.period}</span>
+              </div>
+              <p className="text-xs text-gray-500">{plan.description}</p>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 py-2.5 bg-white text-gray-700 rounded-lg border border-gray-200 font-medium hover:bg-gray-50 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={onContinue}
+          className="flex-[2] py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-lg font-medium transition-colors"
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PaymentSummary({
+  plan,
+  dates,
+  formatDate,
+  formatCurrency,
+  onBack,
+  onConfirm,
+}) {
+  return (
+    <div className="mb-8">
+      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+        Confirm payment
+      </h3>
+
+      <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-4">
+        <div className="flex justify-between py-1.5 text-sm">
+          <span className="text-gray-500">Plan</span>
+          <span className="font-medium text-gray-800">{plan.name}</span>
+        </div>
+        <div className="flex justify-between py-1.5 text-sm">
+          <span className="text-gray-500">Starts</span>
+          <span className="font-medium text-gray-800">
+            {formatDate(dates.startDate)}
+          </span>
+        </div>
+        <div className="flex justify-between py-1.5 text-sm">
+          <span className="text-gray-500">Expires</span>
+          <span className="font-medium text-gray-800">
+            {formatDate(dates.endDate)}
+          </span>
+        </div>
+        <div className="flex justify-between pt-3 mt-2 text-base border-t border-gray-200">
+          <span className="font-semibold text-gray-800">Total</span>
+          <span className="font-bold text-green-600">
+            {formatCurrency(plan.price)}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex-1 py-2.5 bg-white text-gray-700 rounded-lg border border-gray-200 font-medium hover:bg-gray-50 transition-colors"
+        >
+          Back
+        </button>
+        <button
+          type="button"
+          onClick={onConfirm}
+          className="flex-[2] py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+        >
+          Confirm payment · {formatCurrency(plan.price)}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PaymentHistory({
+  memberships,
+  isLoading,
+  membershipStatus,
+  formatDate,
+  formatCurrency,
+}) {
+  return (
+    <>
+      <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <Clock className="w-5 h-5 text-gray-400" />
+        Payment History
+      </h3>
+
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-20 bg-gray-100 animate-pulse rounded-xl"
+            />
+          ))}
+        </div>
+      ) : memberships.length === 0 ? (
+        <div className="text-center p-6 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+          <p className="text-gray-500 text-sm">No payment history found.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {memberships.map((plan) => {
+            const isCurrent =
+              membershipStatus.activeMembership?.id === plan.id &&
+              membershipStatus.isActive;
+            return (
+              <div
+                key={plan.id}
+                className={`border p-4 rounded-xl transition-shadow ${
+                  isCurrent
+                    ? "border-green-200 bg-green-50"
+                    : "border-gray-100 bg-white hover:shadow-md"
+                }`}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-gray-800">
+                      {plan.plan_name}
+                    </span>
+                    {isCurrent && (
+                      <span className="bg-green-600 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                        Current
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-bold text-green-600">
+                    {formatCurrency(plan.price)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-500 mt-2">
+                  <Calendar className="w-3 h-3" />
+                  <span>Starts: {formatDate(plan.start_date)}</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                  <Clock className="w-3 h-3 text-red-400" />
+                  <span>Expires: {formatDate(plan.end_date)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
   );
 }
 
