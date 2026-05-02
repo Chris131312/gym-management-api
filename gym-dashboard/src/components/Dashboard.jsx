@@ -1,26 +1,34 @@
 import React, { useState, useEffect } from "react";
-import { Users, Activity, UserMinus, Dumbbell, Clock } from "lucide-react";
+import {
+  Users,
+  Activity,
+  UserMinus,
+  Dumbbell,
+  Clock,
+  DollarSign,
+} from "lucide-react";
 
 function Dashboard({ members }) {
+  const [stats, setStats] = useState(null);
   const [recentCheckins, setRecentCheckins] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [isLoadingCheckins, setIsLoadingCheckins] = useState(true);
 
   useEffect(() => {
-    const fetchRecentCheckins = async () => {
+    const fetchStats = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/checkins");
+        const res = await fetch("http://localhost:3000/api/dashboard/stats");
         if (res.ok) {
           const result = await res.json();
-          setRecentCheckins(result.data || []);
+          setStats(result.data);
         }
       } catch (error) {
-        console.error("Error fetching recent check-ins:", error);
+        console.error("Error fetching dashboard stats:", error);
       } finally {
-        setIsLoading(false);
+        setIsLoadingStats(false);
       }
     };
-    fetchRecentCheckins();
-  }, []);
+  });
 
   const totalMembers = members.length;
   const activeMembers = members.filter((m) => m.is_active).length;

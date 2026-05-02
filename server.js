@@ -232,33 +232,40 @@ app.post("/api/memberships", async (req, res) => {
 });
 
 app.get("/api/dashboard/stats", async (req, res) => {
-  try{
-    const totalMembersRes = await pool.query("SELECT COUNT(*) FROM members")
-    const totalMembers = parseInt(totalMembersRes.rows[0].count)
+  try {
+    const totalMembersRes = await pool.query("SELECT COUNT(*) FROM members");
+    const totalMembers = parseInt(totalMembersRes.rows[0].count);
 
-    const activeMembersRes = await pool.query("SELECT COUNT(*) FROM members WHERE is_active = true")
-    const activeMembers = parseInt(activeMembersRes.rows[0].count)
+    const activeMembersRes = await pool.query(
+      "SELECT COUNT(*) FROM members WHERE is_active = true",
+    );
+    const activeMembers = parseInt(activeMembersRes.rows[0].count);
 
-    const revenueRes = await pool.query("SELECT SUM(price) FROM memberships")
-    const totalRevenue = revenueRes.rows[0].sum ? parseFloat(revenueRes.row[0].sum) : 0
+    const revenueRes = await pool.query("SELECT SUM(price) FROM memberships");
 
-    const checkinsTodayRes = await pool.query("SELECT COUNT(*) FROM check_ins WHERE DATE(check_in_time) = CURRENT_DATE")
-    const checkinsToday = parseInt(checkinsTodayRes.rows[0].count)
+    const totalRevenue = revenueRes.rows[0].sum
+      ? parseFloat(revenueRes.rows[0].sum)
+      : 0;
+
+    const checkinsTodayRes = await pool.query(
+      "SELECT COUNT(*) FROM check_ins WHERE DATE(check_in_time) = CURRENT_DATE",
+    );
+    const checkinsToday = parseInt(checkinsTodayRes.rows[0].count);
 
     res.status(200).json({
-      success: true, 
+      success: true,
       data: {
         totalMembers,
         activeMembers,
         totalRevenue,
-        checkinsToday
-      }
-    })
+        checkinsToday,
+      },
+    });
   } catch (error) {
-    console.error("Error fetching dashboard stats:", error.message)
-    res.status(500).json({ success: false, error: "Internal server error." })
+    console.error("Error fetching dashboard stats:", error.message);
+    res.status(500).json({ success: false, error: "Internal server error." });
   }
-})
+});
 
 app.listen(PORT, () => {
   console.log(`Server is up and running on http://localhost:${PORT}`);
