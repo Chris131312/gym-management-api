@@ -10,35 +10,13 @@ import { Toaster } from "react-hot-toast";
 function App() {
   // global app state
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [members, setMembers] = useState([]);
-  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [memberToEdit, setMemberToEdit] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
 
   // fetch all members from backend
-  const fetchMembers = async () => {
-    setIsLoadingMembers(true);
-    try {
-      const response = await fetch("http://localhost:3000/api/members");
-      const data = await response.json();
-      if (response.ok) {
-        setMembers(data.data || []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch members:", error);
-    } finally {
-      setIsLoadingMembers(false);
-    }
-  };
-
-  // only load data if we are looking at a view that needs it
-  useEffect(() => {
-    if (activeTab === "members" || activeTab === "dashboard") {
-      fetchMembers();
-    }
-  }, [activeTab]);
+  const fetchMembers = async () => {};
 
   return (
     <div className="min-h-screen bg-gray-100 flex relative">
@@ -46,9 +24,7 @@ function App() {
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <main className="flex-1 p-10 overflow-y-auto">
-        {activeTab === "dashboard" && (
-          <Dashboard members={members} isLoadingMembers={isLoadingMembers} />
-        )}
+        {activeTab === "dashboard" && <Dashboard />}
 
         {activeTab === "check-in" && <CheckInScanner />}
 
@@ -66,7 +42,7 @@ function App() {
               setSelectedMember(member);
               setIsProfileOpen(true);
             }}
-            onRefresh={isModalOpen} 
+            onRefresh={isModalOpen}
           />
         )}
       </main>
