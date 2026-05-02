@@ -1,17 +1,47 @@
 import React, { useEffect, useState } from "react";
-import { X, CreditCard, Calendar, Clock, CheckCircle } from "lucide-react";
+import {
+  X,
+  CreditCard,
+  Calendar,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import toast from "react-hot-toast";
+
+const PLANS = {
+  monthly: {
+    id: "monthly",
+    name: "Monthly Plan",
+    price: 30.0,
+    period: "month",
+    durationMonths: 1,
+    description: "Renews monthly",
+  },
+  annual: {
+    id: "annual",
+    name: "Annual Plan",
+    price: 300.0,
+    period: "year",
+    durationMonths: 12,
+    description: "$25/month equivalent",
+    badge: "Save $60",
+    recommended: true,
+  },
+};
 
 function MemberProfile({ isOpen, onClose, member, onMemberUpdated }) {
   const [memberships, setMemberships] = useState([]);
-  const [showRenewForm, setShowRenewForm] = useState(false);
-  const [planType, setPlanType] = useState("monthly");
   const [isLoading, setIsloading] = useState(false);
+  const [step, setStep] = useState("idle");
+  const [selectedPlan, setSelectedPlan] = useState("annual");
 
   useEffect(() => {
     if (isOpen && member) {
       fetchMemberships();
-      setShowRenewForm(false);
+      setStep("idle");
+      setSelectedPlan("annual");
     }
   }, [isOpen, member]);
 
@@ -31,6 +61,45 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated }) {
       setIsloading(false);
     }
   };
+
+  const membershipStatus = useMemo(() => {
+    if (memberships.length === 0) {
+      return { isActive: false, daysRemaining: 0, activeMemberships: null };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const sortedByExpiry = [...memberships].sort(
+      (a, b) => new Date(b.end_date) - new Date(a.end_date),
+    );
+
+    const latest = sortedByExpiry[0];
+    const expiryDate = new Date(latest.end_date);
+
+    const diffMs = expiryDate - today;
+    const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    return {
+      isActive: daysRemaining > 0,
+      daysRemaining,
+      activeMemberships: latest,
+    };
+  }, [memberships]);
+
+  const newPlanDates = useMemo(() => {
+    const plan = PLANS[selectedPlan];
+    const start = new Date();
+    const end = new Date();
+    end.setMonth(end.getMonth() + plan.durationMonths);
+
+    return {
+      startDate: start,
+      endDate: end,
+      startDateISO: start.toISOString().split("T")[0],
+      endDateISO: end.toISOString().split("T")[0],
+    };
+  }, [selectedPlan]);
 
   const handleRenew = async (e) => {
     e.preventDefault();
