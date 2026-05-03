@@ -47,12 +47,18 @@ function MemberModal({ isOpen, onClose, onSuccess, memberToEdit }) {
   }, [memberToEdit, isOpen]);
 
   const validate = (data) => {
-    const newErros = {};
+    const newErrors = {};
 
     if (!data.first_name.trim()) {
-      newErros.first_name = "First name is required";
+      newErrors.first_name = "First name is required";
     } else if (!NAME_REGEX.test(data.first_name.trim())) {
       newErros.first_name = "Use 2-50 letters only";
+    }
+
+    if (!data.last_name.trim()) {
+      newError.last_name = "Last name is required";
+    } else if (!NAME_REGEX.test(data.first_name.trim())) {
+      newErrors.last_name = "Use 2-50 letters only";
     }
   };
 }
