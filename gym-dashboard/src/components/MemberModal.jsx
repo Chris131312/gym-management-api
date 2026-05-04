@@ -97,3 +97,11 @@ const handleChange = (e) => {
     setErrors(validationErrors);
   }
 };
+
+const handleBlur = (e) => {
+  const { name } = e.target
+  setTouched({ ...touched, [name]: true })
+
+  const validationErrors = validate(formData)
+  setErrors(validationErrors)
+}
