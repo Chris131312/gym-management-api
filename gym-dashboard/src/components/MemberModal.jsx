@@ -56,9 +56,24 @@ function MemberModal({ isOpen, onClose, onSuccess, memberToEdit }) {
     }
 
     if (!data.last_name.trim()) {
-      newError.last_name = "Last name is required";
+      newErrors.last_name = "Last name is required";
     } else if (!NAME_REGEX.test(data.first_name.trim())) {
       newErrors.last_name = "Use 2-50 letters only";
     }
   };
+
+  if (!data.email.trim()) {
+    newErrors.email = "Email is required";
+  } else if (!EMAIL_REGEX.test(data.email.trim())) {
+    newErrors.email = "Enter a valid email address";
+  }
+
+  const phoneDigits = data.phone_number.replace(/\D/g, "");
+  if (!phoneDigits) {
+    newErrors.phone_number = "Phone is required";
+  } else if (phoneDigits.length !== 10) {
+    newErrors.phone_number = "Phone must be 10 digits";
+  }
+
+  return newErrors;
 }
