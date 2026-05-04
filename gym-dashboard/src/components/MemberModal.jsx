@@ -77,3 +77,23 @@ function MemberModal({ isOpen, onClose, onSuccess, memberToEdit }) {
 
   return newErrors;
 }
+
+const handleChange = (e) => {
+  const { name, value, type, checked } = e.target;
+
+  let processedValue = value;
+  if (name === "phone_number") {
+    processedValue = formatPhone(value);
+  }
+
+  const newFormData = {
+    ...formData,
+    [name]: type === "checkbox" ? checked : processedValue,
+  };
+  setFormData(newFormData);
+
+  if (touched[name]) {
+    const validationErrors = validate(newFormData);
+    setErrors(validationErrors);
+  }
+};
