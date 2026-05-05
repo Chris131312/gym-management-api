@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { formatPhoneDisplay } from "../utils/format";
 import {
   X,
   CreditCard,
@@ -161,7 +162,9 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated }) {
             <p className="text-gray-500 text-sm mt-1 truncate">
               {member.email}
             </p>
-            <p className="text-gray-500 text-sm">{member.phone_number}</p>
+            <p className="text-gray-500 text-sm">
+              {formatPhoneDisplay(member.phone_number)}
+            </p>
 
             <div className="mt-3">
               <MembershipBadge status={membershipStatus} />

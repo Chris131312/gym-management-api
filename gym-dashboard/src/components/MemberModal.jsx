@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, AlertCircle, Loader2 } from "lucide-react";
+import { formatPhoneInput } from "../utils/format";
+
 import toast from "react-hot-toast";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,7 +35,7 @@ function MemberModal({ isOpen, onClose, onSuccess, memberToEdit }) {
         first_name: memberToEdit.first_name || "",
         last_name: memberToEdit.last_name || "",
         email: memberToEdit.email || "",
-        phone_number: formatPhone(memberToEdit.phone_number || ""),
+        phone_number: formatPhoneInput(memberToEdit.phone_number || ""),
         is_active:
           memberToEdit.is_active !== undefined ? memberToEdit.is_active : true,
       });
@@ -81,7 +83,7 @@ function MemberModal({ isOpen, onClose, onSuccess, memberToEdit }) {
 
     let processedValue = value;
     if (name === "phone_number") {
-      processedValue = formatPhone(value);
+      processedValue = formatPhoneInput(value);
     }
 
     const newFormData = {

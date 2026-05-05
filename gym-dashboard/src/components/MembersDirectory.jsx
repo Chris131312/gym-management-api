@@ -1,29 +1,37 @@
 import React, { useState, useEffect } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
-import { Search, Trash2, Edit, Eye, ChevronLeft, ChevronRight, User } from "lucide-react";
-import toast from 'react-hot-toast'; 
+import { formatPhoneDisplay } from "../utils/format";
+import {
+  Search,
+  Trash2,
+  Edit,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  User,
+} from "lucide-react";
+import toast from "react-hot-toast";
 
 function MembersDirectory({
-  
   onOpenModal,
-  onRefresh, 
+  onRefresh,
   onEditMember,
   onViewProfile,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [memberToDelete, setMemberToDelete] = useState(null);
-  
+
   const [members, setMembers] = useState([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const limit = 10; 
+  const limit = 10;
 
   const fetchPaginatedMembers = async () => {
     setIsLoadingMembers(true);
     try {
       const response = await fetch(
-        `http://localhost:3000/api/members?page=${currentPage}&limit=${limit}`
+        `http://localhost:3000/api/members?page=${currentPage}&limit=${limit}`,
       );
       if (response.ok) {
         const result = await response.json();
@@ -45,7 +53,6 @@ function MembersDirectory({
     fetchPaginatedMembers();
   }, [onRefresh]);
 
-
   const filteredMembers = members.filter((member) => {
     const fullName = `${member.first_name || ""} ${
       member.last_name || ""
@@ -65,12 +72,12 @@ function MembersDirectory({
         `http://localhost:3000/api/members/${memberToDelete}`,
         {
           method: "DELETE",
-        }
+        },
       );
 
       if (response.ok) {
         setMemberToDelete(null);
-        fetchPaginatedMembers(); 
+        fetchPaginatedMembers();
       } else {
         alert("Failed to delete member. Please try again.");
       }
@@ -81,11 +88,11 @@ function MembersDirectory({
   };
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
   };
 
   const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage(prev => prev - 1);
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
   };
 
   return (
@@ -127,11 +134,22 @@ function MembersDirectory({
           <tbody>
             {isLoadingMembers ? (
               [...Array(5)].map((_, index) => (
-                <tr key={index} className="border-b border-gray-50 animate-pulse">
-                  <td className="p-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div></td>
-                  <td className="p-4"><div className="h-4 bg-gray-200 rounded w-full"></div></td>
-                  <td className="p-4"><div className="h-4 bg-gray-200 rounded w-2/3"></div></td>
-                  <td className="p-4"><div className="h-6 bg-gray-200 rounded-full w-16"></div></td>
+                <tr
+                  key={index}
+                  className="border-b border-gray-50 animate-pulse"
+                >
+                  <td className="p-4">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  </td>
+                  <td className="p-4">
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  </td>
+                  <td className="p-4">
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  </td>
+                  <td className="p-4">
+                    <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+                  </td>
                   <td className="p-4 flex justify-end gap-2">
                     <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
                     <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
@@ -148,17 +166,26 @@ function MembersDirectory({
                         <div className="bg-gray-100 p-4 rounded-full mb-4">
                           <Search className="w-8 h-8 text-gray-400" />
                         </div>
-                        <h3 className="text-xl font-semibold text-gray-800 mb-2">No matches found</h3>
-                        <p className="text-gray-500">We couldn't find any member matching "{searchTerm}"</p>
+                        <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                          No matches found
+                        </h3>
+                        <p className="text-gray-500">
+                          We couldn't find any member matching "{searchTerm}"
+                        </p>
                       </>
                     ) : (
                       <>
                         <div className="bg-blue-50 p-4 rounded-full mb-4">
                           <Users className="w-8 h-8 text-blue-500" />
                         </div>
-                        <h3 className="text-xl font-semibold text-gray-800 mb-2">No members yet</h3>
-                        <p className="text-gray-500 mb-6">Get started by adding your first gym member to the directory.</p>
-                        <button 
+                        <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                          No members yet
+                        </h3>
+                        <p className="text-gray-500 mb-6">
+                          Get started by adding your first gym member to the
+                          directory.
+                        </p>
+                        <button
                           onClick={onOpenModal}
                           className="bg-white border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 px-5 py-2.5 rounded-lg transition-colors shadow-sm"
                         >
@@ -179,7 +206,9 @@ function MembersDirectory({
                     {member.first_name} {member.last_name}
                   </td>
                   <td className="p-4 text-gray-600">{member.email}</td>
-                  <td className="p-4 text-gray-600">{member.phone_number}</td>
+                  <td className="p-4 text-gray-600">
+                    {formatPhoneDisplay(member.phone_number)}
+                  </td>
                   <td className="p-4">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -223,18 +252,21 @@ function MembersDirectory({
         {!isLoadingMembers && members.length > 0 && (
           <div className="flex items-center justify-between border-t border-gray-100 p-4 bg-gray-50/50">
             <p className="text-sm text-gray-500">
-              Page <span className="font-semibold text-gray-900">{currentPage}</span> of <span className="font-semibold text-gray-900">{totalPages}</span>
+              Page{" "}
+              <span className="font-semibold text-gray-900">{currentPage}</span>{" "}
+              of{" "}
+              <span className="font-semibold text-gray-900">{totalPages}</span>
             </p>
             <div className="flex items-center gap-2">
-              <button 
-                onClick={handlePrevPage} 
+              <button
+                onClick={handlePrevPage}
                 disabled={currentPage === 1}
                 className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-white shadow-sm"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <button 
-                onClick={handleNextPage} 
+              <button
+                onClick={handleNextPage}
                 disabled={currentPage === totalPages}
                 className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-white shadow-sm"
               >
