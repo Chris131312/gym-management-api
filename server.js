@@ -18,12 +18,18 @@ app.get("/api/health", (req, res) => {
 });
 
 // CREATE MEMBER
-app.post("/api/members", async (req, res) => {
+const validate = require("./gym-dashboard/src/middleware/validate");
+const {
+  createMemberSchema,
+  updatedMemberSchema,
+} = require("./gym-dashboard/src/schemas/memberSchema");
+
+app.post("/api/members", validate(createMemberSchema), async (req, res) => {
   try {
-    const { first_name, last_name, email, phone_number } = req.body;
+    const { first_name, last_name, email, phone_number, is_active } = req.body;
     const newMember = await pool.query(
-      "INSERT INTO members (first_name, last_name, email, phone_number) VALUES ($1, $2, $3, $4) RETURNING *",
-      [first_name, last_name, email, phone_number],
+      "INSERT INTO members (first_name, last_name, email, phone_number, is_active) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [first_name, last_name, email, phone_number, is_active],
     );
     res.status(201).json({
       success: true,
@@ -32,7 +38,7 @@ app.post("/api/members", async (req, res) => {
     });
   } catch (error) {
     console.error("Error saving member:", error.message);
-    res.status(500).json({ success: false, error: "Internal server error." });
+    res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
 
