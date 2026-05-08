@@ -18,11 +18,11 @@ app.get("/api/health", (req, res) => {
 });
 
 // CREATE MEMBER
-const validate = require("./gym-dashboard/src/middleware/validate");
+const validate = require("./middleware/validate");
 const {
   createMemberSchema,
   updatedMemberSchema,
-} = require("./gym-dashboard/src/schemas/memberSchema");
+} = require("./schemas/memberSchema");
 
 app.post("/api/members", validate(createMemberSchema), async (req, res) => {
   try {
