@@ -72,7 +72,7 @@ app.get("/api/members", async (req, res) => {
 });
 
 // UPDATE MEMBER
-app.put("/api/members/:id", async (req, res) => {
+app.put("/api/members/:id", validate(updatedMemberSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { first_name, last_name, email, phone_number, is_active } = req.body;
@@ -81,7 +81,6 @@ app.put("/api/members/:id", async (req, res) => {
       "UPDATE members SET first_name = $1, last_name = $2, email = $3, phone_number = $4, is_active = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING *",
       [first_name, last_name, email, phone_number, is_active, id],
     );
-
     if (updatedMember.rows.length === 0) {
       return res
         .status(404)
@@ -98,7 +97,6 @@ app.put("/api/members/:id", async (req, res) => {
     res.status(500).json({ success: false, error: "Internal server error." });
   }
 });
-
 // DELETE MEMBER
 app.delete("/api/members/:id", async (req, res) => {
   try {
