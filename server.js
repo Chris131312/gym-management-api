@@ -1,11 +1,15 @@
 require("dotenv").config();
 
-const validate = require("./config/validateEnv");
+const validateEnv = require("./config/validateEnv");
 validateEnv();
 
 const express = require("express");
 const cors = require("cors");
 const poll = require("./config/db");
+
+const validate = require("./middleware/validate")
+const asyncHandler = require("./middleware/asyncHandler")
+const errorHandler = require("./middleware/errorHandler")
 
 // HEALTH CHECK
 app.get("/api/health", (req, res) => {
