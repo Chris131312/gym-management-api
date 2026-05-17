@@ -79,6 +79,7 @@ app.get(
   }),
 );
 
+// GET MEMBER BY ID
 app.get(
   "/api/members/:id",
   asyncHandler(async (req, res) => {
@@ -86,5 +87,14 @@ app.get(
     const result = await pool.query("SELECT * FROM members WHERE id = $1", [
       id,
     ]);
+
+    if (result.rows.length === 0) {
+      throw new NotFoundError("Member");
+    }
+
+    res.status(200).json({
+      success: true,
+      data: result.rows[0],
+    });
   }),
 );
