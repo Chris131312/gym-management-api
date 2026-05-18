@@ -98,3 +98,28 @@ app.get(
     });
   }),
 );
+
+// UPDATE MEMBER
+app.put(
+  "/api/members/:id",
+  validate(updateMemberSchema),
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { first_name, last_name, email, phone_number, is_active } = req.body;
+
+    const updatedMember = await pool.query(
+      "UPDATE members SET first_name = $1, last_name = $2, email = $3, phone_number = $4, is_active = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING *",
+      [first_name, last_name, email, phone_number, is_active, id],
+    );
+
+    if (updatedMember.rows.length === 0) {
+      throw new NotFoundError("Member");
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Member updated successfully!",
+      data: updatedMember.rows[0],
+    });
+  }),
+);
