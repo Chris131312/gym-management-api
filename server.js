@@ -123,3 +123,24 @@ app.put(
     });
   }),
 );
+
+// DELETE MEMBER
+app.delete(
+  "/api/members/:id",
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const deleteMember = await pool.query(
+      "DELETE FROM members WHERE id = $1 RETURNING *",
+      [id],
+    );
+    if (deleteMember.rows.length === 0) {
+      throw new NotfoundError("Member");
+    }
+    res.status(200).json({
+      success: true,
+      message: "Member deleted successfully!",
+      data: deleteMember.rows[0],
+    });
+  }),
+);
