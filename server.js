@@ -144,3 +144,6 @@ app.delete(
     });
   }),
 );
+
+// REGISTER CHECK-IN
+app.post;
