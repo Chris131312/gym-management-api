@@ -146,4 +146,18 @@ app.delete(
 );
 
 // REGISTER CHECK-IN
-app.post;
+app.post(
+  "/api/checkins",
+  asyncHandler(async (req, res) => {
+    const { member_id } = req.body;
+
+    const memberQuery = await pool.query(
+      "SELECT * FROM members WHERE id = $1",
+      [member_id],
+    );
+    if (memberQuery.rows.length === 0) {
+      throw new NotfoundError("Member");
+    }
+    const member = memberQuery.rows[0];
+  }),
+);
