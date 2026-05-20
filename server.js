@@ -203,3 +203,18 @@ app.get(
     });
   }),
 );
+
+// GET MEMBERSHIPS BY MEMBER ID
+app.get(
+  "/api/memberships/:member_id",
+  asyncHandler(async (req, res) => {
+    const { member_id } = req.params;
+
+    const result = await pool.query(
+      "SELECT * FROM memberships WHERE member_id = $1 ORDER BY end_date DESC",
+      [member_id],
+    );
+
+    res.status(200).json(result.rows);
+  }),
+);
