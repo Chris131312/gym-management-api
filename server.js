@@ -240,3 +240,36 @@ app.post(
     });
   }),
 );
+// GET DASHBOARD STATS
+app.get(
+  "/api/dashboard/stats",
+  asyncHandler(async (req, res) => {
+    const totalMembersRes = await pool.query("SELECT COUNT(*) FROM members");
+    const totalMembers = parseInt(totalMembersRes.rows[0].count);
+
+    const activeMembersRes = await pool.query(
+      "SELECT COUNT(*) FROM members WHERE is_active = true",
+    );
+    const activeMembers = parseInt(activeMembersRes.rows[0].count);
+
+    const revenueRes = await pool.query("SELECT SUM(price) FROM memberships");
+    const totalRevenue = revenueRes.rows[0].sum
+      ? parseFloat(revenueRes.rows[0].sum)
+      : 0;
+
+    const checkinsTodayRes = await pool.query(
+      "SELECT COUNT(*) FROM check_ins WHERE DATE(check_in_time) = CURRENT_DATE",
+    );
+    const checkinsToday = parseInt(checkinsTodayRes.rows[0].count);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalMembers,
+        activeMembers,
+        totalRevenue,
+        checkinsToday,
+      },
+    });
+  }),
+);
