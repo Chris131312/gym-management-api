@@ -159,5 +159,22 @@ app.post(
       throw new NotfoundError("Member");
     }
     const member = memberQuery.rows[0];
+
+    if (member.is_active === false) {
+      throw new ForbiddenError(
+        "Access Denied. Member account is inactive. Please visit the front desk.",
+      );
+    }
+
+    const newCheckIn = await pool.query(
+      "INSERT INTO check_ins (member_id) VALUES ($1) RETURNING *",
+      [member_id],
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Access Granted! Have a great workout.",
+      data: newCheckIn.rows[0],
+    });
   }),
 );
