@@ -178,3 +178,28 @@ app.post(
     });
   }),
 );
+
+// READ CHECK-INS WITH MEMBER INFO
+app.get(
+  "/api/checkins",
+  asyncHandler(async (req, res) => {
+    const query = `
+    SELECT
+    check_ins.id AS checkin_id,
+    check_ins.check_in_time,
+    members.first_name,
+    members.last_name
+    FROM check_ins
+    INNER JOIN members ON check_ins.member_id = members.id
+    ORDER BY check_ins.check_in_time DESC
+    `;
+
+    const recentCheckIns = await pool.query(query);
+
+    res.status(200).json({
+      success: true,
+      count: recentCheckIns.rowsCount,
+      data: recentCheckIns.rows,
+    });
+  }),
+);
