@@ -218,3 +218,25 @@ app.get(
     res.status(200).json(result.rows);
   }),
 );
+
+// POST (SELL/RENEW) MEMBERSHIP
+app.post(
+  "/api/memberships",
+  asyncHandler(async (req, res) => {
+    const { member_id, plan_name, price, start_date, end_date } = req.body;
+
+    const result = await pool.query(
+      `INSERT INTO memberships (member_id, plan_name, price, start_date, end_date) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [member_id, plan_name, price, start_date, end_date],
+    );
+
+    await pool.query("UPDATE members SET is_active = true WHERE id = $1", [
+      member_id,
+    ]);
+
+    res.status(201).json({
+      message: "Membership added successfully",
+      membership: result.rows[0],
+    });
+  }),
+);
