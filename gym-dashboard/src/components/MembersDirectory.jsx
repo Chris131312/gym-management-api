@@ -8,7 +8,7 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
-  User,
+  Users,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
