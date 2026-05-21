@@ -36,7 +36,7 @@ function CheckInScanner() {
         setMessage(data.message || "Access Granted");
         toast.success("Check-in successful");
       } else {
-        scanStatus(error);
+        setScanStatus(error);
         setMessage(data.error || "Access Denied");
         toast.error("Check-in failed");
       }
