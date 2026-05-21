@@ -273,3 +273,14 @@ app.get(
     });
   }),
 );
+// 404 HANDLER
+app.use((req, res, next) => {
+  next(new NotfoundError(`Route ${req.method} ${req.path}`));
+});
+
+// ERROR HANDLER
+app.use(errorHandler);
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
