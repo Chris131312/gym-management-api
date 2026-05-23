@@ -14,7 +14,7 @@ import toast from "react-hot-toast";
 
 function MembersDirectory({
   onOpenModal,
-  onRefresh,
+  refreshKey,
   onEditMember,
   onViewProfile,
 }) {
@@ -47,11 +47,7 @@ function MembersDirectory({
 
   useEffect(() => {
     fetchPaginatedMembers();
-  }, [currentPage]);
-
-  useEffect(() => {
-    fetchPaginatedMembers();
-  }, [onRefresh]);
+  }, [currentPage, refreshKey]);
 
   const filteredMembers = members.filter((member) => {
     const fullName = `${member.first_name || ""} ${

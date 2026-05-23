@@ -15,8 +15,9 @@ function App() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
 
-  // fetch all members from backend
-  const fetchMembers = async () => {};
+  // refresh trigger for child components
+  const [refreshKey, setRefreshKey] = useState(0);
+  const triggerRefresh = () => setRefreshKey((prev) => prev + 1);
 
   return (
     <div className="min-h-screen bg-gray-100 flex relative">
@@ -42,7 +43,7 @@ function App() {
               setSelectedMember(member);
               setIsProfileOpen(true);
             }}
-            onRefresh={isModalOpen}
+            refreshKey={refreshKey}
           />
         )}
       </main>
@@ -50,7 +51,7 @@ function App() {
       <MemberModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={fetchMembers}
+        onSuccess={triggerRefresh}
         memberToEdit={memberToEdit}
       />
 
@@ -58,7 +59,7 @@ function App() {
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
         member={selectedMember}
-        onMemberUpdated={fetchMembers}
+        onMemberUpdated={triggerRefresh}
       />
     </div>
   );
