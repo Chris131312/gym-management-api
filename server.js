@@ -13,7 +13,7 @@ const errorHandler = require("./middleware/errorHandler");
 
 const {
   createMemberSchema,
-  updatedMemberSchema,
+  updateMemberSchema,
 } = require("./schemas/memberSchema");
 const { NotFoundError, ForbiddenError } = require("./utils/errors");
 const { success } = require("zod");
