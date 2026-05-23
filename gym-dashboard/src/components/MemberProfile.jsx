@@ -65,7 +65,7 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated }) {
 
   const membershipStatus = useMemo(() => {
     if (memberships.length === 0) {
-      return { isActive: false, daysRemaining: 0, activeMemberships: null };
+      return { isActive: false, daysRemaining: 0, activeMembership: null };
     }
 
     const today = new Date();
@@ -84,7 +84,7 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated }) {
     return {
       isActive: daysRemaining > 0,
       daysRemaining,
-      activeMemberships: latest,
+      activeMembership: latest,
     };
   }, [memberships]);
 

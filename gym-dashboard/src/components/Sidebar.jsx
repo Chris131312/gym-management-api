@@ -3,7 +3,7 @@ import { Dumbbell, LayoutDashboard, Activity, Users } from "lucide-react";
 
 function Sidebar({ activeTab, setActiveTab }) {
   return (
-    <aside className="2-64 bg-white shadow-md z-10 flex flex-col">
+    <aside className="w-64 bg-white shadow-md z-10 flex flex-col">
       <div className="p-6 flex items-center gap-3 text-blue-600 border-b border-gray-100">
         <Dumbbell className="w-8 h-8" />
         <h1 className="text-xl font-bold text-gray-800">Gym OS</h1>
