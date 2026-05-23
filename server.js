@@ -5,7 +5,7 @@ validateEnv();
 
 const express = require("express");
 const cors = require("cors");
-const poll = require("./config/db");
+const pool = require("./config/db");
 
 const validate = require("./middleware/validate");
 const asyncHandler = require("./middleware/asyncHandler");
