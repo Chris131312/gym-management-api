@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { api } from "../api/client";
 import {
   Users,
   Activity,
@@ -17,11 +18,8 @@ function Dashboard({ members }) {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/dashboard/stats");
-        if (res.ok) {
-          const result = await res.json();
-          setStats(result.data);
-        }
+        const result = await api.get("/dashboard/stats");
+        setStats(result.data);
       } catch (error) {
         console.error("Error fetching dashboard stats:", error);
       } finally {
@@ -35,11 +33,8 @@ function Dashboard({ members }) {
   useEffect(() => {
     const fetchRecentCheckins = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/checkins");
-        if (res.ok) {
-          const result = await res.json();
-          setRecentCheckins(result.data || []);
-        }
+        const result = await api.get("/checkins");
+        setRecentCheckins(result.data || []);
       } catch (error) {
         console.error("Error fetching recent check-ins:", error);
       } finally {
