@@ -1,5 +1,3 @@
-import { endsWith } from "zod";
-
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 async function request(endpoint, options = {}) {
@@ -26,16 +24,22 @@ async function request(endpoint, options = {}) {
       data?.error || data?.message || `Request failed (${response.status})`;
     throw new Error(message);
   }
+
   return data;
 }
 
 export const api = {
   get: (endpoint) => request(endpoint, { method: "GET" }),
 
-  post:
-    (endpoint,
-    {
+  post: (endpoint, body) =>
+    request(endpoint, {
       method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  put: (endpoint, body) =>
+    request(endpoint, {
+      method: "PUT",
       body: JSON.stringify(body),
     }),
 
