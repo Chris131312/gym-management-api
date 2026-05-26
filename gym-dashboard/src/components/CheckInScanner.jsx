@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { api } from "../api/client";
 import { ScanLine, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -23,27 +24,15 @@ function CheckInScanner() {
     setInputValue("");
 
     try {
-      const res = await fetch("http://localhost:3000/api/checkins", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ member_id: scannedId }),
-      });
+      const data = await api.post("/checkins", { member_id: scannedId });
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setScanStatus("success");
-        setMessage(data.message || "Access Granted");
-        toast.success("Check-in successful");
-      } else {
-        setScanStatus(error);
-        setMessage(data.error || "Access Denied");
-        toast.error("Check-in failed");
-      }
+      setScanStatus("success");
+      setMessage(data.message || "Access Granted");
+      toast.success("Check-in successful");
     } catch (error) {
       setScanStatus("error");
-      setMessage("Server Connection Error");
-      toast.error("System offline");
+      setMessage(error.message || "Access Denied");
+      toast.error("Check-in failed");
     }
 
     setTimeout(() => {
