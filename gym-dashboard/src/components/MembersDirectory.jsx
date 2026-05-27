@@ -62,22 +62,13 @@ function MembersDirectory({
     if (!memberToDelete) return;
 
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/members/${memberToDelete}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      if (response.ok) {
-        setMemberToDelete(null);
-        fetchPaginatedMembers();
-      } else {
-        alert("Failed to delete member. Please try again.");
-      }
+      await api.del(`/members/${memberToDelete}`);
+      setMemberToDelete(null);
+      fetchPaginatedMembers();
+      toast.success("Member deleted");
     } catch (error) {
-      console.error("Network error while deleting:", error);
-      alert("Cannot connect to server.");
+      console.error("Error while deleting:", error);
+      toast.error("Failed to delete member");
     }
   };
 
