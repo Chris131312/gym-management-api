@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import { id } from "../api/client";
 import { formatPhoneDisplay } from "../utils/format";
 import {
   Search,
@@ -30,14 +31,11 @@ function MembersDirectory({
   const fetchPaginatedMembers = async () => {
     setIsLoadingMembers(true);
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/members?page=${currentPage}&limit=${limit}`,
+      const result = await api.get(
+        `/member?page=${currentPage}&limit=${limit}`,
       );
-      if (response.ok) {
-        const result = await response.json();
-        setMembers(result.data || []);
-        setTotalPages(result.totalPages || 1);
-      }
+      setMembers(result.data || []);
+      setTotalPages(result.totalPages || 1);
     } catch (error) {
       console.error("Error fetching members:", error);
     } finally {
