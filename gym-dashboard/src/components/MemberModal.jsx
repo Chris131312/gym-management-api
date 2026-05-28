@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { api } from "../api/client";
 import { X, AlertCircle, Loader2 } from "lucide-react";
 import { formatPhoneInput } from "../utils/format";
 
@@ -131,23 +132,17 @@ function MemberModal({ isOpen, onClose, onSuccess, memberToEdit }) {
     };
 
     try {
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success(memberToEdit ? "Member updated!" : "Member created");
-        onSuccess();
-        onClose();
+      if (memberToEdit) {
+        await api.put(`/members/${memberToEdit.id}`, payload);
+        toast.success("Member updated!");
       } else {
-        toast.error(data.error || "Failed to save member.");
+        await api.post(`/member/${memberToEdit.id}`, payload);
+        toast.success("Member created");
       }
+      onSuccess();
+      onClose();
     } catch (error) {
-      toast.error("Server connection failed");
+      toast.error(error.messagge || "Failed to save member.");
     } finally {
       setIsSubmitting(false);
     }
