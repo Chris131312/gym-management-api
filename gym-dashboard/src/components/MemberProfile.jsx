@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { api } from "../api/client";
 import { formatPhoneDisplay } from "../utils/format";
 import {
   X,
@@ -49,13 +50,8 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated }) {
   const fetchMemberships = async () => {
     setIsloading(true);
     try {
-      const res = await fetch(
-        `http://localhost:3000/api/memberships/${member.id}`,
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setMemberships(data);
-      }
+      const data = await api.get(`/memberships/${member.id}`);
+      setMemberships(data);
     } catch (error) {
       toast.error("Failed to load payment history");
     } finally {
@@ -115,22 +111,13 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated }) {
     };
 
     try {
-      const res = await fetch("http://localhost:3000/api/memberships", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        toast.success(`Payment of $${plan.price} processed successfully`);
-        await fetchMemberships();
-        setStep("idle");
-        onMemberUpdated();
-      } else {
-        toast.error("Failed to process payment");
-        setStep("confirm");
-      }
+      await api.post("/memberships", payload);
+      toast.success(`Payment of $${plan.price} processed successfully`);
+      await fetchMemberships();
+      setStep("idle");
+      onMemberUpdated();
     } catch (error) {
-      toast.error("Server connection failed");
+      toast.error(error.message || "Failed to process payment");
       setStep("confirm");
     }
   };
