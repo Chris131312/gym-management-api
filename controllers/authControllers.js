@@ -12,3 +12,16 @@ const generateToken = (user) => {
     { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
   );
 };
+const register = async (req, res) => {
+  const { email, password, full_name, role } = req.body;
+
+  // 1. Check if email already exists
+  const existingUser = await pool.query(
+    "SELECT id FROM users WHERE email = $1",
+    [email],
+  );
+
+  if (existingUser.rows.length > 0) {
+    throw new ConflictError("A user with this email already exists");
+  }
+};
