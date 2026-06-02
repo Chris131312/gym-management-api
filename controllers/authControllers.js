@@ -15,7 +15,6 @@ const generateToken = (user) => {
 const register = async (req, res) => {
   const { email, password, full_name, role } = req.body;
 
-  // 1. Check if email already exists
   const existingUser = await pool.query(
     "SELECT id FROM users WHERE email = $1",
     [email],
@@ -24,4 +23,13 @@ const register = async (req, res) => {
   if (existingUser.rows.length > 0) {
     throw new ConflictError("A user with this email already exists");
   }
+
+  const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
+
+  const result = await pool.query(
+    `INSERT INTO users (email, password_hash, full_name, role)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, email, full_name, role, is_active, created_at`,
+    [email, password_hash, full_name, role],
+  );
 };
