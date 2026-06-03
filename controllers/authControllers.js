@@ -32,4 +32,16 @@ const register = async (req, res) => {
      RETURNING id, email, full_name, role, is_active, created_at`,
     [email, password_hash, full_name, role],
   );
+
+  const newUser = result.rows[0];
+  const token = generateToken(newUser);
+
+  res.status(201).json({
+    success: true,
+    message: "User registered successfully",
+    data: {
+      user: newUser,
+      token,
+    },
+  });
 };
