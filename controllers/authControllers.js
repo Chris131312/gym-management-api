@@ -57,3 +57,9 @@ const result = await pool.query("SELECT * FROM users WHERE email = $1", [
 if (result.rows.length === 0) {
     throw new NotFoundError("Invalid email or password");
   }
+
+  const user = result.rows[0]
+
+if(!user.is_active){
+  throw new NotFoundError("Account is deactivated. Contact an administrator")
+}
