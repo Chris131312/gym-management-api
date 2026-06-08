@@ -1,11 +1,11 @@
-const { Z } = require("zod");
+const { z } = require("zod");
 
-const registerSchema = Z.object({
+const registerSchema = z.object({
   email: z
     .string({ error: "Email is required" })
     .trim()
     .toLowerCase()
-    .email({ error: "Invalid email formar" })
+    .email({ error: "Invalid email format" })
     .max(255, { error: "Email is too long" }),
 
   password: z
@@ -19,7 +19,7 @@ const registerSchema = Z.object({
     .min(2, { error: "Full name must be at least 2 characters" })
     .max(255, { error: "Full name is too long" }),
 
-  role: Z.enum(["admin", "receptionist"], {
+  role: z.enum(["admin", "receptionist"], {
     error: "Role must be 'admin' or receptionist",
   }),
 });

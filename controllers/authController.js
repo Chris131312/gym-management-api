@@ -1,8 +1,7 @@
-const bcrypy = require("bcrypt");
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
 const { NotFoundError, ConflictError } = require("../utils/errors");
-const { success } = require("zod");
 
 const SALT_ROUNDS = 10;
 
@@ -13,6 +12,7 @@ const generateToken = (user) => {
     { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
   );
 };
+
 const register = async (req, res) => {
   const { email, password, full_name, role } = req.body;
 
@@ -49,46 +49,46 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   const { email, password } = req.body;
-};
 
-const result = await pool.query("SELECT * FROM users WHERE email = $1", [
-  email,
-]);
+  const result = await pool.query("SELECT * FROM users WHERE email = $1", [
+    email,
+  ]);
 
-if (result.rows.length === 0) {
-  throw new NotFoundError("Invalid email or password");
-}
-
-const user = result.rows[0];
-
-if (!user.is_active) {
-  throw new NotFoundError("Account is deactivated. Contact an administrator");
-}
-
-const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-
-if (!isPasswordValid) {
-  throw new NotFoundError("Invalid email or password");
-}
-
-const token = generateToken(user)
-
-res.status(200).json({
-  success: true,
-  message: "Login successful",
-  data: {
-    user: {
-      id: user.id,
-      email: user.email,
-      full_name: user.full_name,
-      role: user.role,
-      is_active: user.is_active,
-    },
-    token,
+  if (result.rows.length === 0) {
+    throw new NotFoundError("Invalid email or password");
   }
-})
+
+  const user = result.rows[0];
+
+  if (!user.is_active) {
+    throw new NotFoundError("Account is deactivated. Contact an administrator");
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+
+  if (!isPasswordValid) {
+    throw new NotFoundError("Invalid email or password");
+  }
+
+  const token = generateToken(user);
+
+  res.status(200).json({
+    success: true,
+    message: "Login successful",
+    data: {
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+        is_active: user.is_active,
+      },
+      token,
+    },
+  });
+};
 
 module.exports = {
   register,
   login,
-}
+};
