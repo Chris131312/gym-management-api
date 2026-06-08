@@ -16,6 +16,7 @@ const {
   updateMemberSchema,
 } = require("./schemas/memberSchema");
 const { NotFoundError, ForbiddenError } = require("./utils/errors");
+const authRoutes = require("./routes/authRoutes");
 const { success } = require("zod");
 
 const app = express();
@@ -23,6 +24,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/auth", authRoutes);
 
 // Health Check
 app.get("/api/health", (req, res) => {
