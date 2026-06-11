@@ -39,6 +39,7 @@ app.get("/api/health", (req, res) => {
 // CREATE MEMBER
 app.post(
   "/api/members",
+  asyncHandler(protect),
   validate(createMemberSchema),
   asyncHandler(async (req, res) => {
     const { first_name, last_name, email, phone_number, is_active } = req.body;
@@ -58,6 +59,7 @@ app.post(
 // READ ALL MEMBERS
 app.get(
   "/api/members",
+  asyncHandler(protect),
   asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -85,6 +87,7 @@ app.get(
 // GET MEMBER BY ID
 app.get(
   "/api/members/:id",
+  asyncHandler(protect),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
     const result = await pool.query("SELECT * FROM members WHERE id = $1", [
@@ -130,6 +133,8 @@ app.put(
 // DELETE MEMBER
 app.delete(
   "/api/members/:id",
+  asyncHandler(protect),
+  restrictTo("admin"),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
 
@@ -151,6 +156,7 @@ app.delete(
 // REGISTER CHECK-IN
 app.post(
   "/api/checkins",
+  asyncHandler(protect),
   asyncHandler(async (req, res) => {
     const { member_id } = req.body;
 
@@ -185,6 +191,7 @@ app.post(
 // READ CHECK-INS WITH MEMBER INFO
 app.get(
   "/api/checkins",
+  asyncHandler(protect),
   asyncHandler(async (req, res) => {
     const query = `
     SELECT
@@ -210,6 +217,7 @@ app.get(
 // GET MEMBERSHIPS BY MEMBER ID
 app.get(
   "/api/memberships/:member_id",
+  asyncHandler(protect),
   asyncHandler(async (req, res) => {
     const { member_id } = req.params;
 
@@ -225,6 +233,7 @@ app.get(
 // POST (SELL/RENEW) MEMBERSHIP
 app.post(
   "/api/memberships",
+  asyncHandler(protect),
   asyncHandler(async (req, res) => {
     const { member_id, plan_name, price, start_date, end_date } = req.body;
 
@@ -248,6 +257,8 @@ app.post(
 // GET DASHBOARD STATS
 app.get(
   "/api/dashboard/stats",
+  asyncHandler(protect),
+  restrictTo("admin"),
   asyncHandler(async (req, res) => {
     const totalMembersRes = await pool.query("SELECT COUNT(*) FROM members");
     const totalMembers = parseInt(totalMembersRes.rows[0].count);
