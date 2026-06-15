@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { isAuthenticated, getUser, clearAuth } from "./utils/auth";
+import LoginPage from "./components/LoginPage";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
 import MemberModal from "./components/MemberModal";
@@ -8,21 +10,53 @@ import MemberProfile from "./components/MemberProfile";
 import { Toaster } from "react-hot-toast";
 
 function App() {
-  // global app state
+  // Auth state
+  const [user, setUser] = useState(getUser());
+  const [loggedIn, setLoggedIn] = useState(isAuthenticated());
+
+  // App state
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [memberToEdit, setMemberToEdit] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
 
-  // refresh trigger for child components
+  // Refresh trigger for child components
   const [refreshKey, setRefreshKey] = useState(0);
   const triggerRefresh = () => setRefreshKey((prev) => prev + 1);
 
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    setLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    clearAuth();
+    setUser(null);
+    setLoggedIn(false);
+    setActiveTab("dashboard");
+  };
+
+  // If not logged in, show login page
+  if (!loggedIn) {
+    return (
+      <>
+        <Toaster position="top-right" reverseOrder={false} />
+        <LoginPage onLoginSuccess={handleLoginSuccess} />
+      </>
+    );
+  }
+
+  // If logged in, show the main app
   return (
     <div className="min-h-screen bg-gray-100 flex relative">
       <Toaster position="top-right" reverseOrder={false} />
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        user={user}
+        onLogout={handleLogout}
+      />
 
       <main className="flex-1 p-10 overflow-y-auto">
         {activeTab === "dashboard" && <Dashboard />}
