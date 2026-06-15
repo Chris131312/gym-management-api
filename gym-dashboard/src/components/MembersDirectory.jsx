@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
-import { id } from "../api/client";
+import { api } from "../api/client";
 import { formatPhoneDisplay } from "../utils/format";
 import {
   Search,

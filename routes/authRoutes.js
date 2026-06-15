@@ -2,9 +2,10 @@ const express = require("express");
 const router = express.Router();
 const validate = require("../middleware/validate");
 const asyncHandler = require("../middleware/asyncHandler");
+const protect = require("../middleware/protect");
+const restrictTo = require("../middleware/restrictTo");
 const { registerSchema, loginSchema } = require("../schemas/authSchema");
 const { register, login } = require("../controllers/authController");
-const protect = require("../middleware/protect");
 // POST /api/auth/register
 router.post(
   "/register",

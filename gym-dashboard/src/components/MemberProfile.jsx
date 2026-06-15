@@ -35,7 +35,7 @@ const PLANS = {
 
 function MemberProfile({ isOpen, onClose, member, onMemberUpdated }) {
   const [memberships, setMemberships] = useState([]);
-  const [isLoading, setIsloading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState("idle");
   const [selectedPlan, setSelectedPlan] = useState("annual");
 
@@ -48,14 +48,14 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated }) {
   }, [isOpen, member]);
 
   const fetchMemberships = async () => {
-    setIsloading(true);
+    setIsLoading(true);
     try {
       const data = await api.get(`/memberships/${member.id}`);
       setMemberships(data);
     } catch (error) {
       toast.error("Failed to load payment history");
     } finally {
-      setIsloading(false);
+      setIsLoading(false);
     }
   };
 

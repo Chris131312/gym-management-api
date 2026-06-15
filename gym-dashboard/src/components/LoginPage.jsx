@@ -1,38 +1,40 @@
 import React, { useState } from "react";
 import { Dumbbell, Loader2, AlertCircle } from "lucide-react";
 import { api } from "../api/client";
-import { saveAuth } from "../../../utils/auth";
+import { saveAuth } from "../utils/auth";
 
 function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-}
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-  if (!email.trim() || !password.trim()) {
-    setError("Please enter your email and password");
-    return;
-  }
+    if (!email.trim() || !password.trim()) {
+      setError("Please enter your email and password");
+      return;
+    }
 
-  setIsLoading(true);
+    setIsLoading(true);
 
-  try {
-    const result = await api.post("/auth/login", {
-      email: email.trim().toLowerCase(),
-      password,
-    });
+    try {
+      const result = await api.post("/auth/login", {
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
-    saveAuth(result.data.token, result.data.user);
-    onLoginSuccess(result.data.user);
-  } catch (error) {
-    setError(error.message || "Login failed. Please try again.");
-  } finally {
-    setIsLoading(false);
-  }
+      saveAuth(result.data.token, result.data.user);
+      onLoginSuccess(result.data.user);
+    } catch (error) {
+      setError(error.message || "Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-sm p-8">
@@ -109,6 +111,6 @@ const handleSubmit = async (e) => {
       </div>
     </div>
   );
-};
+}
 
 export default LoginPage;
