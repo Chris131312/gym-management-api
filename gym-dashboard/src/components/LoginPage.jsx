@@ -12,4 +12,8 @@ function LoginPage({ onLoginSuccess }) {
 const handleSubmit = async (e) => {
   e.preventDefault();
   setError("");
+
+  if (!email.trim() || !password.trim()) {
+    setError("Please enter ");
+  }
 };
