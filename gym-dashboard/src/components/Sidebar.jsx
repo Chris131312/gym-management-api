@@ -16,12 +16,14 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout }) {
       </div>
 
       <nav className="mt-6 flex flex-col gap-2 px-4 flex-1">
-        <button
-          onClick={() => setActiveTab("dashboard")}
-          className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "dashboard" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
-        >
-          <LayoutDashboard className="w-5 h-5" /> Overview
-        </button>
+        {user?.role === "admin" && (
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "dashboard" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
+          >
+            <LayoutDashboard className="w-5 h-5" /> Overview
+          </button>
+        )}
         <button
           onClick={() => setActiveTab("check-in")}
           className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "check-in" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
