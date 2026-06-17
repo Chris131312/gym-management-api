@@ -77,7 +77,7 @@ function App() {
               setSelectedMember(member);
               setIsProfileOpen(true);
             }}
-            refreshKey={refreshKey}
+            userRole={user?.role}
           />
         )}
       </main>

@@ -18,6 +18,7 @@ function MembersDirectory({
   refreshKey,
   onEditMember,
   onViewProfile,
+  userRole,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [memberToDelete, setMemberToDelete] = useState(null);
@@ -220,13 +221,15 @@ function MembersDirectory({
                     >
                       <Eye className="w-5 h-5" />
                     </button>
-                    <button
-                      onClick={() => setMemberToDelete(member.id)}
-                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete Member"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                    {userRole === "admin" && (
+                      <button
+                        onClick={() => setMemberToDelete(member.id)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete Member"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))
