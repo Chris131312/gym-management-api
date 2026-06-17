@@ -15,7 +15,9 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(isAuthenticated());
 
   // App state
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(
+    user?.role === "admin" ? "dashboard" : "check-in",
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [memberToEdit, setMemberToEdit] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
