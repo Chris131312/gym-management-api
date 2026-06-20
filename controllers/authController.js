@@ -88,6 +88,17 @@ const login = async (req, res) => {
   });
 };
 
+const getUsers = async (req, res) => {
+  const result = await pool.query(
+    "SELECT id, email, full_name, role, is_active, created_at FROM users ORDER BY created_at DESC",
+  );
+
+  res.status(200).json({
+    success: true,
+    data: result.rows,
+  });
+};
+
 module.exports = {
   register,
   login,
