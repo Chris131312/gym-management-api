@@ -9,3 +9,5 @@ const INITIAL_FORM = {
   full_name: "",
   role: "receptionist",
 };
+
+function RegisterUserModal({ isOpen, onClose, onSuccess }) {}
