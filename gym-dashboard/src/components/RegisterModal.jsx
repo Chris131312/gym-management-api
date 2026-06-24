@@ -24,4 +24,9 @@ function RegisterUserModal({ isOpen, onClose, onSuccess }) {
       newErrors.password = "Minimum 8 characters";
     return newErrors;
   };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    if (errors[name]) setErrors({ ...errors, [name]: null });
+  };
 }
