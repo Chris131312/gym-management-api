@@ -10,4 +10,18 @@ const INITIAL_FORM = {
   role: "receptionist",
 };
 
-function RegisterUserModal({ isOpen, onClose, onSuccess }) {}
+function RegisterUserModal({ isOpen, onClose, onSuccess }) {
+  const [formData, setFormData] = useState(INITIAL_FORM);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.full_name.trim()) newErrors.full_name = "Name is required";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    if (!formData.password) newErrors.password = "Password is required";
+    else if (formData.password.length < 8)
+      newErrors.password = "Minimum 8 characters";
+    return newErrors;
+  };
+}
