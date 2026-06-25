@@ -29,4 +29,10 @@ function RegisterUserModal({ isOpen, onClose, onSuccess }) {
     setFormData({ ...formData, [name]: value });
     if (errors[name]) setErrors({ ...errors, [name]: null });
   };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const validationErrors = validate();
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
+  };
 }
