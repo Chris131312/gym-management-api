@@ -19,4 +19,14 @@ function StaffPage() {
       setIsLoading(false);
     }
   };
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const formatDate = (date) =>
+    new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
 }
