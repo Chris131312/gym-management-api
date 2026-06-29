@@ -8,13 +8,7 @@ const { registerSchema, loginSchema } = require("../schemas/authSchema");
 const { register, login, getUsers } = require("../controllers/authController");
 
 // POST /api/auth/register (admin only)
-router.post(
-  "/register",
-  asyncHandler(protect),
-  restrictTo("admin"),
-  validate(registerSchema),
-  asyncHandler(register),
-);
+router.post("/register", validate(registerSchema), asyncHandler(register));
 
 // POST /api/auth/login (public)
 router.post("/login", validate(loginSchema), asyncHandler(login));
