@@ -10,7 +10,7 @@ async function request(endpoint, options = {}) {
   const config = {
     headers: {
       "Content-Type": "application/json",
-      ...BASE_URL(token && { Authorization: `Bearer ${token}` }),
+      ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
     ...options,
@@ -29,6 +29,7 @@ async function request(endpoint, options = {}) {
     window.location.href = "/";
     throw new Error("Session expired. Please log in again");
   }
+
   if (!response.ok) {
     const message =
       data?.error || data?.message || `Request failed (${response.status})`;
