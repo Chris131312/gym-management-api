@@ -5,6 +5,7 @@ import {
   Activity,
   Users,
   LogOut,
+  Shield,
 } from "lucide-react";
 
 function Sidebar({ activeTab, setActiveTab, user, onLogout }) {
@@ -36,6 +37,14 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout }) {
         >
           <Users className="w-5 h-5" /> Members Directory
         </button>
+        {user?.role === "admin" && (
+          <button
+            onClick={() => setActiveTab("staff")}
+            className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${activeTab === "staff" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
+          >
+            <Shield className="w-5 h-5" /> Staff
+          </button>
+        )}
       </nav>
 
       <div className="p-4 border-t border-gray-100">

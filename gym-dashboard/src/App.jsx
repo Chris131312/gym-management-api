@@ -8,6 +8,7 @@ import CheckInScanner from "./components/CheckInScanner";
 import MembersDirectory from "./components/MembersDirectory";
 import MemberProfile from "./components/MemberProfile";
 import { Toaster } from "react-hot-toast";
+import StaffPage from "./components/StaffPage";
 
 function App() {
   // Auth state
@@ -82,6 +83,7 @@ function App() {
             userRole={user?.role}
           />
         )}
+        {activeTab === "staff" && <StaffPage />}
       </main>
 
       <MemberModal
