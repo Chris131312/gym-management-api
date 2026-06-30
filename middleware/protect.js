@@ -5,7 +5,11 @@ const { UnauthorizedError } = require("../utils/errors");
 const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader || !authHeader.startWith("Bearer")) {
+  if (
+    !authHeader ||
+    typeof authHeader !== "string" ||
+    !authHeader.startsWith("Bearer ")
+  ) {
     throw new UnauthorizedError("No token provided. Please log in");
   }
 
@@ -13,12 +17,12 @@ const protect = async (req, res, next) => {
 
   let decoded;
   try {
-    decoded = jwt.verify(token, process.env.JTW_SECRET);
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
     if (error.name === "TokenExpiredError") {
       throw new UnauthorizedError("Token expired. Please log in again");
     }
-    throw new UnauthorizedError("Invalid token. Please log in.");
+    throw new UnauthorizedError("Invalid token. Please log in");
   }
 
   const result = await pool.query(
