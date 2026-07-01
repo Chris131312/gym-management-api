@@ -33,7 +33,7 @@ function MembersDirectory({
     setIsLoadingMembers(true);
     try {
       const result = await api.get(
-        `/member?page=${currentPage}&limit=${limit}`,
+        `/members?page=${currentPage}&limit=${limit}`,
       );
       setMembers(result.data || []);
       setTotalPages(result.totalPages || 1);
