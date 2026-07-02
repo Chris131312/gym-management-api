@@ -62,7 +62,7 @@ function App() {
       />
 
       <main className="flex-1 p-10 overflow-y-auto">
-        {activeTab === "dashboard" && <Dashboard />}
+        {activeTab === "dashboard" && <Dashboard user={user} />}
 
         {activeTab === "check-in" && <CheckInScanner />}
 

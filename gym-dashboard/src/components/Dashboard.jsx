@@ -3,13 +3,13 @@ import { api } from "../api/client";
 import {
   Users,
   Activity,
-  UserMinus,
-  Dumbbell,
+  TrendingUp,
   Clock,
   DollarSign,
+  UserCheck,
 } from "lucide-react";
 
-function Dashboard({ members }) {
+function Dashboard({ user }) {
   const [stats, setStats] = useState(null);
   const [recentCheckins, setRecentCheckins] = useState([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
@@ -26,7 +26,6 @@ function Dashboard({ members }) {
         setIsLoadingStats(false);
       }
     };
-
     fetchStats();
   }, []);
 
@@ -50,141 +49,250 @@ function Dashboard({ members }) {
   const totalRevenue = stats?.totalRevenue ?? 0;
   const checkinsToday = stats?.checkinsToday ?? 0;
 
+  const activeRate =
+    totalMembers > 0 ? Math.round((activeMembers / totalMembers) * 100) : 0;
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
+
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const getInitials = (name) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const StatSkeleton = () => (
+    <div className="animate-pulse space-y-3">
+      <div className="h-4 w-20 bg-gray-100 rounded" />
+      <div className="h-8 w-24 bg-gray-100 rounded" />
+    </div>
+  );
+
   return (
-    <div className="p-8 max-w-7xl mx-auto w-full animate-fade-in">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">
-            Dashboard Overview
-          </h1>
-          <p className="text-gray-500 mt-1">
-            Real-time statistics and activity for your gym.
-          </p>
-        </div>
-        <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
-          <Dumbbell className="w-5 h-5" />
-          Live System
-        </div>
+    <div className="max-w-6xl mx-auto w-full">
+      {/* Header */}
+      <div className="mb-10">
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+          {getGreeting()}, {user?.full_name?.split(" ")[0] || "Admin"}
+        </h1>
+        <p className="text-gray-400 text-sm mt-1">{today}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
-          <div className="bg-blue-100 p-4 rounded-xl">
-            <Users className="w-8 h-8 text-blue-600" />
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        {/* Total Members */}
+        <div className="bg-white border border-gray-100 rounded-xl p-5 hover:border-gray-200 transition-colors">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm text-gray-500">Total Members</span>
+            <div className="p-2 bg-gray-50 rounded-lg">
+              <Users className="w-4 h-4 text-gray-400" />
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Total Members</p>
-            {isLoadingStats ? (
-              <div className="h-8 w-16 bg-gray-200 animate-pulse rounded mt-1" />
-            ) : (
-              <p className="text-3xl font-bold text-gray-800">{totalMembers}</p>
-            )}
-          </div>
+          {isLoadingStats ? (
+            <StatSkeleton />
+          ) : (
+            <p className="text-3xl font-bold text-gray-900 tracking-tight">
+              {totalMembers}
+            </p>
+          )}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
-          <div className="bg-green-100 p-4 rounded-xl">
-            <Activity className="w-8 h-8 text-green-600" />
+        {/* Active Members */}
+        <div className="bg-white border border-gray-100 rounded-xl p-5 hover:border-gray-200 transition-colors">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm text-gray-500">Active</span>
+            <div className="p-2 bg-emerald-50 rounded-lg">
+              <Activity className="w-4 h-4 text-emerald-500" />
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">
-              Active Memberships
-            </p>
-            {isLoadingStats ? (
-              <div className="h-8 w-16 bg-gray-200 animate-pulse rounded mt-1" />
-            ) : (
-              <p className="text-3xl font-bold text-gray-800">
+          {isLoadingStats ? (
+            <StatSkeleton />
+          ) : (
+            <div>
+              <p className="text-3xl font-bold text-gray-900 tracking-tight">
                 {activeMembers}
               </p>
-            )}
-          </div>
+              <p className="text-xs text-emerald-600 font-medium mt-1">
+                {activeRate}% of total
+              </p>
+            </div>
+          )}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
-          <div className="bg-red-100 p-4 rounded-xl">
-            <UserMinus className="w-8 h-8 text-red-600" />
+        {/* Revenue */}
+        <div className="bg-white border border-gray-100 rounded-xl p-5 hover:border-gray-200 transition-colors">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm text-gray-500">Revenue</span>
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <DollarSign className="w-4 h-4 text-blue-500" />
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">
-              Inactive Accounts
+          {isLoadingStats ? (
+            <StatSkeleton />
+          ) : (
+            <p className="text-3xl font-bold text-gray-900 tracking-tight">
+              $
+              {totalRevenue.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </p>
-            {isLoadingStats ? (
-              <div className="h-8 w-16 bg-gray-200 animate-pulse rounded mt-1" />
-            ) : (
-              <p className="text-3xl font-bold text-gray-800">
-                {inactiveMembers}
-              </p>
-            )}
-          </div>
+          )}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
-          <div className="bg-emerald-100 p-4 rounded-xl">
-            <DollarSign className="w-8 h-8 text-emerald-600" />
+        {/* Check-ins Today */}
+        <div className="bg-white border border-gray-100 rounded-xl p-5 hover:border-gray-200 transition-colors">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm text-gray-500">Check-ins Today</span>
+            <div className="p-2 bg-violet-50 rounded-lg">
+              <UserCheck className="w-4 h-4 text-violet-500" />
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Total Revenue</p>
-            {isLoadingStats ? (
-              <div className="h-8 w-24 bg-gray-200 animate-pulse rounded mt-1" />
-            ) : (
-              <p className="text-3xl font-bold text-gray-800">
-                $
-                {totalRevenue.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </p>
-            )}
-          </div>
+          {isLoadingStats ? (
+            <StatSkeleton />
+          ) : (
+            <p className="text-3xl font-bold text-gray-900 tracking-tight">
+              {checkinsToday}
+            </p>
+          )}
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <Clock className="w-5 h-5 text-blue-500" />
-          <h2 className="text-lg font-semibold text-gray-800">
-            Check-ins Today
-            {!isLoadingStats && (
-              <span className="ml-2 bg-blue-100 text-blue-700 text-sm font-medium px-2 py-0.5 rounded-full">
-                {checkinsToday}
-              </span>
-            )}
-          </h2>
+      {/* Bottom Section: Two columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Recent Check-ins (2/3 width) */}
+        <div className="lg:col-span-2 bg-white border border-gray-100 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">
+              Recent Activity
+            </h2>
+            <span className="text-xs text-gray-400">Today</span>
+          </div>
+
+          {isLoadingCheckins ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-3 animate-pulse">
+                  <div className="w-8 h-8 bg-gray-100 rounded-full" />
+                  <div className="flex-1">
+                    <div className="h-4 w-32 bg-gray-100 rounded" />
+                  </div>
+                  <div className="h-3 w-16 bg-gray-100 rounded" />
+                </div>
+              ))}
+            </div>
+          ) : recentCheckins.length === 0 ? (
+            <div className="text-center py-12">
+              <Clock className="w-8 h-8 text-gray-200 mx-auto mb-3" />
+              <p className="text-gray-400 text-sm">
+                No check-ins recorded yet today.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1 max-h-80 overflow-y-auto">
+              {recentCheckins.map((checkin) => (
+                <div
+                  key={checkin.checkin_id}
+                  className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-xs font-medium">
+                      {getInitials(
+                        `${checkin.first_name} ${checkin.last_name}`,
+                      )}
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 flex-1">
+                    {checkin.first_name} {checkin.last_name}
+                  </span>
+                  <span className="text-xs text-gray-400 tabular-nums">
+                    {new Date(checkin.check_in_time).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {isLoadingCheckins ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-12 bg-gray-100 animate-pulse rounded-xl"
-              />
-            ))}
-          </div>
-        ) : recentCheckins.length === 0 ? (
-          <p className="text-gray-400 text-sm text-center py-6">
-            No check-ins recorded yet today.
-          </p>
-        ) : (
-          <div className="space-y-3 max-h-72 overflow-y-auto">
-            {recentCheckins.map((checkin) => (
-              <div
-                key={checkin.checkin_id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-xl"
-              >
-                <span className="font-medium text-gray-700">
-                  {checkin.first_name} {checkin.last_name}
-                </span>
-                <span className="text-sm text-gray-400">
-                  {new Date(checkin.check_in_time).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+        {/* Quick Stats Panel (1/3 width) */}
+        <div className="bg-white border border-gray-100 rounded-xl p-6">
+          <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-5">
+            Overview
+          </h2>
+
+          <div className="space-y-5">
+            {/* Active Rate Visual */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-500">Active Rate</span>
+                <span className="text-sm font-bold text-gray-900">
+                  {isLoadingStats ? "..." : `${activeRate}%`}
                 </span>
               </div>
-            ))}
+              <div className="w-full bg-gray-100 rounded-full h-2">
+                <div
+                  className="bg-gray-900 h-2 rounded-full transition-all duration-700"
+                  style={{ width: isLoadingStats ? "0%" : `${activeRate}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Breakdown */}
+            <div className="pt-4 border-t border-gray-50 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+                  <span className="text-sm text-gray-500">Active</span>
+                </div>
+                <span className="text-sm font-semibold text-gray-900">
+                  {isLoadingStats ? "..." : activeMembers}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gray-300 rounded-full" />
+                  <span className="text-sm text-gray-500">Inactive</span>
+                </div>
+                <span className="text-sm font-semibold text-gray-900">
+                  {isLoadingStats ? "..." : inactiveMembers}
+                </span>
+              </div>
+            </div>
+
+            {/* Revenue Card */}
+            <div className="pt-4 border-t border-gray-50">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <span className="text-sm text-gray-500">Total Revenue</span>
+              </div>
+              <p className="text-2xl font-bold text-gray-900 tracking-tight">
+                {isLoadingStats
+                  ? "..."
+                  : `$${totalRevenue.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}`}
+              </p>
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
