@@ -19,9 +19,19 @@ function StaffPage() {
       setIsLoading(false);
     }
   };
+
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const getInitials = (name) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const formatDate = (date) =>
     new Date(date).toLocaleDateString("en-US", {
@@ -29,97 +39,154 @@ function StaffPage() {
       month: "short",
       day: "numeric",
     });
+
   return (
-    <div className="max-w-4xl mx-auto animate-fade-in">
-      <div className="flex justify-between items-center mb-6">
+    <div className="max-w-5xl mx-auto w-full">
+      {/* Header */}
+      <div className="flex justify-between items-start mb-8">
         <div>
-          <h2 className="text-3xl font-bold text-gray-800">Staff Management</h2>
-          <p className="text-gray-500 mt-1">
-            Manage employee accounts and roles.
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+            Staff
+          </h2>
+          <p className="text-gray-400 text-sm mt-1">
+            {isLoading
+              ? "Loading..."
+              : `${users.length} team member${users.length !== 1 ? "s" : ""}`}
           </p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
+          className="bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors flex items-center gap-2"
         >
           <UserPlus className="w-4 h-4" />
           Add User
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Table */}
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-100 text-gray-600 text-sm">
-              <th className="p-4 font-semibold">Name</th>
-              <th className="p-4 font-semibold">Email</th>
-              <th className="p-4 font-semibold">Role</th>
-              <th className="p-4 font-semibold">Status</th>
-              <th className="p-4 font-semibold">Created</th>
+            <tr className="border-b border-gray-100">
+              <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Member
+              </th>
+              <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Role
+              </th>
+              <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
+                Joined
+              </th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               [...Array(3)].map((_, i) => (
-                <tr key={i} className="border-b border-gray-50 animate-pulse">
-                  <td className="p-4">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <tr key={i} className="border-b border-gray-50">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3 animate-pulse">
+                      <div className="w-9 h-9 bg-gray-100 rounded-full" />
+                      <div>
+                        <div className="h-4 w-32 bg-gray-100 rounded mb-1.5" />
+                        <div className="h-3 w-40 bg-gray-100 rounded" />
+                      </div>
+                    </div>
                   </td>
-                  <td className="p-4">
-                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <td className="px-5 py-4 animate-pulse">
+                    <div className="h-5 w-20 bg-gray-100 rounded-full" />
                   </td>
-                  <td className="p-4">
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <td className="px-5 py-4 animate-pulse">
+                    <div className="h-4 w-14 bg-gray-100 rounded" />
                   </td>
-                  <td className="p-4">
-                    <div className="h-6 bg-gray-200 rounded-full w-16"></div>
-                  </td>
-                  <td className="p-4">
-                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  <td className="px-5 py-4 animate-pulse">
+                    <div className="h-4 w-24 bg-gray-100 rounded ml-auto" />
                   </td>
                 </tr>
               ))
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan="5" className="p-12 text-center">
-                  <Shield className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500">No staff members yet.</p>
+                <td colSpan="4" className="px-5 py-16 text-center">
+                  <Shield className="w-8 h-8 text-gray-200 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-gray-900 mb-1">
+                    No team members yet
+                  </p>
+                  <p className="text-xs text-gray-400 mb-4">
+                    Add your first staff member to get started.
+                  </p>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="text-sm text-gray-900 font-medium underline underline-offset-4 hover:text-gray-600 transition-colors"
+                  >
+                    Add your first team member
+                  </button>
                 </td>
               </tr>
             ) : (
               users.map((user) => (
                 <tr
                   key={user.id}
-                  className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                  className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
                 >
-                  <td className="p-4 font-medium text-gray-800">
-                    {user.full_name}
+                  {/* Member: Avatar + Name + Email */}
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          user.role === "admin" ? "bg-gray-900" : "bg-gray-400"
+                        }`}
+                      >
+                        <span className="text-white text-xs font-medium">
+                          {getInitials(user.full_name)}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {user.full_name}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
                   </td>
-                  <td className="p-4 text-gray-600">{user.email}</td>
-                  <td className="p-4">
+
+                  {/* Role Badge */}
+                  <td className="px-5 py-3.5">
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${
+                      className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium capitalize ${
                         user.role === "admin"
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-blue-100 text-blue-700"
+                          ? "bg-gray-900 text-white"
+                          : "bg-gray-100 text-gray-600"
                       }`}
                     >
                       {user.role}
                     </span>
                   </td>
-                  <td className="p-4">
+
+                  {/* Status */}
+                  <td className="px-5 py-3.5">
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        user.is_active
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
+                      className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+                        user.is_active ? "text-emerald-600" : "text-gray-400"
                       }`}
                     >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          user.is_active ? "bg-emerald-500" : "bg-gray-300"
+                        }`}
+                      />
                       {user.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="p-4 text-gray-500 text-sm">
-                    {formatDate(user.created_at)}
+
+                  {/* Joined Date */}
+                  <td className="px-5 py-3.5 text-right">
+                    <span className="text-xs text-gray-400">
+                      {formatDate(user.created_at)}
+                    </span>
                   </td>
                 </tr>
               ))
