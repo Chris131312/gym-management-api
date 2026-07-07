@@ -8,12 +8,22 @@ import {
   DollarSign,
   UserCheck,
 } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 function Dashboard({ user }) {
   const [stats, setStats] = useState(null);
   const [recentCheckins, setRecentCheckins] = useState([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isLoadingCheckins, setIsLoadingCheckins] = useState(true);
+  const [chartData, setChartData] = useState(null);
+  const [isLoadingCharts, setIsLoadingCharts] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -27,6 +37,19 @@ function Dashboard({ user }) {
       }
     };
     fetchStats();
+  }, []);
+  useEffect(() => {
+    const fetchCharts = async () => {
+      try {
+        const result = await api.get("/dashboard/charts");
+        setChartData(result.data);
+      } catch (error) {
+        console.error("Error fetching chart data:", error);
+      } finally {
+        setIsLoadingCharts(false);
+      }
+    };
+    fetchCharts();
   }, []);
 
   useEffect(() => {
@@ -181,6 +204,109 @@ function Dashboard({ user }) {
               Recent Activity
             </h2>
             <span className="text-xs text-gray-400">Today</span>
+          </div>
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+            {/* Weekly Check-ins */}
+            <div className="bg-white border border-gray-100 rounded-xl p-6">
+              <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-5">
+                Weekly Check-ins
+              </h2>
+              {isLoadingCharts ? (
+                <div className="h-48 bg-gray-50 rounded-lg animate-pulse" />
+              ) : chartData?.weeklyCheckins?.length > 0 ? (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={chartData.weeklyCheckins}>
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: "#9ca3af" }}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: "#9ca3af" }}
+                      width={30}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#111827",
+                        border: "none",
+                        borderRadius: "8px",
+                        fontSize: "13px",
+                        color: "#fff",
+                      }}
+                      cursor={{ fill: "rgba(0,0,0,0.04)" }}
+                    />
+                    <Bar
+                      dataKey="count"
+                      name="Check-ins"
+                      fill="#111827"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-48 flex items-center justify-center">
+                  <p className="text-sm text-gray-400">
+                    No check-in data for this week yet.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Monthly Revenue */}
+            <div className="bg-white border border-gray-100 rounded-xl p-6">
+              <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-5">
+                Monthly Revenue
+              </h2>
+              {isLoadingCharts ? (
+                <div className="h-48 bg-gray-50 rounded-lg animate-pulse" />
+              ) : chartData?.monthlyRevenue?.length > 0 ? (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={chartData.monthlyRevenue}>
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: "#9ca3af" }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: "#9ca3af" }}
+                      width={50}
+                      tickFormatter={(value) => `$${value}`}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#111827",
+                        border: "none",
+                        borderRadius: "8px",
+                        fontSize: "13px",
+                        color: "#fff",
+                      }}
+                      cursor={{ fill: "rgba(0,0,0,0.04)" }}
+                      formatter={(value) => [`$${value.toFixed(2)}`, "Revenue"]}
+                    />
+                    <Bar
+                      dataKey="revenue"
+                      name="Revenue"
+                      fill="#111827"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-48 flex items-center justify-center">
+                  <p className="text-sm text-gray-400">
+                    No revenue data available yet.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {isLoadingCheckins ? (

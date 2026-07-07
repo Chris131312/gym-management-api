@@ -299,6 +299,53 @@ app.get(
     });
   }),
 );
+// GET DASHBOARD CHARTS DATA
+app.get(
+  "/api/dashboard/charts",
+  asyncHandler(protect),
+  restrictTo("admin"),
+  asyncHandler(async (req, res) => {
+    // Weekly check-ins (last 7 days)
+    const weeklyCheckins = await pool.query(`
+      SELECT
+        TO_CHAR(DATE(check_in_time), 'Dy') AS day,
+        DATE(check_in_time) AS date,
+        COUNT(*) AS count
+      FROM check_ins
+      WHERE check_in_time >= CURRENT_DATE - INTERVAL '6 days'
+      GROUP BY DATE(check_in_time), TO_CHAR(DATE(check_in_time), 'Dy')
+      ORDER BY DATE(check_in_time)
+    `);
+
+    // Monthly revenue (last 6 months)
+    const monthlyRevenue = await pool.query(`
+      SELECT
+        TO_CHAR(DATE_TRUNC('month', start_date), 'Mon') AS month,
+        DATE_TRUNC('month', start_date) AS date,
+        SUM(price) AS revenue,
+        COUNT(*) AS sales
+      FROM memberships
+      WHERE start_date >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '5 months'
+      GROUP BY DATE_TRUNC('month', start_date), TO_CHAR(DATE_TRUNC('month', start_date), 'Mon')
+      ORDER BY DATE_TRUNC('month', start_date)
+    `);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        weeklyCheckins: weeklyCheckins.rows.map((row) => ({
+          day: row.day,
+          count: parseInt(row.count),
+        })),
+        monthlyRevenue: monthlyRevenue.rows.map((row) => ({
+          month: row.month,
+          revenue: parseFloat(row.revenue),
+          sales: parseInt(row.sales),
+        })),
+      },
+    });
+  }),
+);
 
 // 404 HANDLER
 app.use((req, res, next) => {
