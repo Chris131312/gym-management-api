@@ -22,6 +22,8 @@ function MembersDirectory({
   userRole,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [memberToDelete, setMemberToDelete] = useState(null);
   const [members, setMembers] = useState([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(true);
@@ -30,12 +32,25 @@ function MembersDirectory({
   const [totalMembers, setTotalMembers] = useState(0);
   const limit = 10;
 
+  // Debounce: wait 400ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const fetchPaginatedMembers = async () => {
     setIsLoadingMembers(true);
     try {
-      const result = await api.get(
-        `/members?page=${currentPage}&limit=${limit}`,
-      );
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: limit,
+        ...(debouncedSearch && { search: debouncedSearch }),
+        ...(statusFilter !== "all" && { status: statusFilter }),
+      });
+      const result = await api.get(`/members?${params.toString()}`);
       setMembers(result.data || []);
       setTotalPages(result.totalPages || 1);
       setTotalMembers(result.totalMembers || 0);
@@ -48,17 +63,7 @@ function MembersDirectory({
 
   useEffect(() => {
     fetchPaginatedMembers();
-  }, [currentPage, refreshKey]);
-
-  const filteredMembers = members.filter((member) => {
-    const fullName =
-      `${member.first_name || ""} ${member.last_name || ""}`.toLowerCase();
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      fullName.includes(searchLower) ||
-      (member.email && member.email.toLowerCase().includes(searchLower))
-    );
-  });
+  }, [currentPage, refreshKey, debouncedSearch, statusFilter]);
 
   const handleDelete = async () => {
     if (!memberToDelete) return;
@@ -96,12 +101,12 @@ function MembersDirectory({
           <p className="text-gray-400 text-sm mt-1">
             {isLoadingMembers
               ? "Loading..."
-              : `${totalMembers} members registered`}
+              : `${totalMembers} member${totalMembers !== 1 ? "s" : ""} found`}
           </p>
         </div>
         <button
           onClick={onOpenModal}
-          className="bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors flex items-center gap-2 group"
+          className="bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors flex items-center gap-2"
         >
           <UserPlus className="w-4 h-4" />
           Add Member
@@ -109,7 +114,7 @@ function MembersDirectory({
       </div>
 
       {/* Search */}
-      <div className="mb-6 relative">
+      <div className="mb-4 relative">
         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
           <Search className="h-4 w-4 text-gray-400" />
         </div>
@@ -120,6 +125,26 @@ function MembersDirectory({
           onChange={(e) => setSearchTerm(e.target.value)}
           className="block w-full pl-10 pr-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
         />
+      </div>
+
+      {/* Status Filter */}
+      <div className="flex gap-2 mb-6">
+        {["all", "active", "inactive"].map((filter) => (
+          <button
+            key={filter}
+            onClick={() => {
+              setStatusFilter(filter);
+              setCurrentPage(1);
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors ${
+              statusFilter === filter
+                ? "bg-gray-900 text-white"
+                : "bg-white border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300"
+            }`}
+          >
+            {filter === "all" ? "All Members" : filter}
+          </button>
+        ))}
       </div>
 
       {/* Table */}
@@ -166,17 +191,17 @@ function MembersDirectory({
                   </td>
                 </tr>
               ))
-            ) : filteredMembers.length === 0 ? (
+            ) : members.length === 0 ? (
               <tr>
                 <td colSpan="4" className="px-5 py-16 text-center">
-                  {searchTerm ? (
+                  {debouncedSearch || statusFilter !== "all" ? (
                     <div>
                       <Search className="w-8 h-8 text-gray-200 mx-auto mb-3" />
                       <p className="text-sm font-medium text-gray-900 mb-1">
-                        No results for "{searchTerm}"
+                        No results found
                       </p>
                       <p className="text-xs text-gray-400">
-                        Try searching with a different term.
+                        Try a different search term or filter.
                       </p>
                     </div>
                   ) : (
@@ -199,12 +224,11 @@ function MembersDirectory({
                 </td>
               </tr>
             ) : (
-              filteredMembers.map((member) => (
+              members.map((member) => (
                 <tr
                   key={member.id}
                   className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors group"
                 >
-                  {/* Member: Avatar + Name */}
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
@@ -218,7 +242,6 @@ function MembersDirectory({
                     </div>
                   </td>
 
-                  {/* Contact: Email + Phone stacked */}
                   <td className="px-5 py-3.5">
                     <p className="text-sm text-gray-700">{member.email}</p>
                     <p className="text-xs text-gray-400 mt-0.5">
@@ -226,7 +249,6 @@ function MembersDirectory({
                     </p>
                   </td>
 
-                  {/* Status Badge */}
                   <td className="px-5 py-3.5">
                     <span
                       className={`inline-flex items-center gap-1.5 text-xs font-medium ${
@@ -242,7 +264,6 @@ function MembersDirectory({
                     </span>
                   </td>
 
-                  {/* Actions */}
                   <td className="px-5 py-3.5">
                     <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
