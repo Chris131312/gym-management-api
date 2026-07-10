@@ -98,7 +98,60 @@ const getUsers = async (req, res) => {
     data: result.rows,
   });
 };
+const updateUser = async (req, res) => {
+  const { id } = req.params;
+  const { full_name, email, role, is_active } = req.body;
 
+  // Prevent admin from changing their own role
+  if (parseInt(id) === req.user.id && role && role !== req.user.role) {
+    throw new ForbiddenError("You cannot change your own role");
+  }
+
+  const result = await pool.query(
+    `UPDATE users
+     SET full_name = COALESCE($1, full_name),
+         email = COALESCE($2, email),
+         role = COALESCE($3, role),
+         is_active = COALESCE($4, is_active)
+     WHERE id = $5
+     RETURNING id, email, full_name, role, is_active, created_at`,
+    [full_name, email, role, is_active, id],
+  );
+
+  if (result.rows.length === 0) {
+    throw new NotFoundError("User");
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "User updated successfully",
+    data: result.rows[0],
+  });
+};
+
+const deleteUser = async (req, res) => {
+  const { id } = req.params;
+
+  // Prevent admin from deleting themselves
+  if (parseInt(id) === req.user.id) {
+    throw new ForbiddenError("You cannot delete your own account");
+  }
+
+  const result = await pool.query(
+    "DELETE FROM users WHERE id = $1 RETURNING id, email, full_name",
+    [id],
+  );
+
+  if (result.rows.length === 0) {
+    throw new NotFoundError("User");
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "User deleted successfully",
+    data: result.rows[0],
+  });
+};
 module.exports = {
   register,
   login,
