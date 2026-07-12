@@ -5,7 +5,13 @@ const asyncHandler = require("../middleware/asyncHandler");
 const protect = require("../middleware/protect");
 const restrictTo = require("../middleware/restrictTo");
 const { registerSchema, loginSchema } = require("../schemas/authSchema");
-const { register, login, getUsers } = require("../controllers/authController");
+const {
+  register,
+  login,
+  getUsers,
+  updateUser,
+  deleteUser,
+} = require("../controllers/authController");
 
 // POST /api/auth/register (admin only)
 router.post(
@@ -15,6 +21,7 @@ router.post(
   validate(registerSchema),
   asyncHandler(register),
 );
+
 // POST /api/auth/login (public)
 router.post("/login", validate(loginSchema), asyncHandler(login));
 
@@ -24,6 +31,22 @@ router.get(
   asyncHandler(protect),
   restrictTo("admin"),
   asyncHandler(getUsers),
+);
+
+// PUT /api/auth/users/:id (admin only)
+router.put(
+  "/users/:id",
+  asyncHandler(protect),
+  restrictTo("admin"),
+  asyncHandler(updateUser),
+);
+
+// DELETE /api/auth/users/:id (admin only)
+router.delete(
+  "/users/:id",
+  asyncHandler(protect),
+  restrictTo("admin"),
+  asyncHandler(deleteUser),
 );
 
 module.exports = router;
