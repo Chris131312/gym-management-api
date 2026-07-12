@@ -1,7 +1,11 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
-const { NotFoundError, ConflictError } = require("../utils/errors");
+const {
+  NotFoundError,
+  ConflictError,
+  ForbiddenError,
+} = require("../utils/errors");
 
 const SALT_ROUNDS = 10;
 
@@ -156,4 +160,6 @@ module.exports = {
   register,
   login,
   getUsers,
+  updateUser,
+  deleteUser,
 };
