@@ -83,7 +83,7 @@ function App() {
             userRole={user?.role}
           />
         )}
-        {activeTab === "staff" && <StaffPage />}
+        {activeTab === "staff" && <StaffPage currentUserId={user?.id} />}
       </main>
 
       <MemberModal
