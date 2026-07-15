@@ -375,6 +375,56 @@ app.get(
     });
   }),
 );
+// UPDATE MEMBERSHIP
+app.put(
+  "/api/memberships/:id",
+  asyncHandler(protect),
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { plan_name, price, start_date, end_date } = req.body;
+
+    const result = await pool.query(
+      `UPDATE memberships SET plan_name = $1, price = $2, start_date = $3, end_date = $4
+       WHERE id = $5 RETURNING *`,
+      [plan_name, price, start_date, end_date, id],
+    );
+
+    if (result.rows.length === 0) {
+      throw new NotFoundError("Membership");
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Membership updated successfully",
+      data: result.rows[0],
+    });
+  }),
+);
+
+// DELETE MEMBERSHIP (admin only)
+app.delete(
+  "/api/memberships/:id",
+  asyncHandler(protect),
+  restrictTo("admin"),
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      "DELETE FROM memberships WHERE id = $1 RETURNING *",
+      [id],
+    );
+
+    if (result.rows.length === 0) {
+      throw new NotFoundError("Membership");
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Membership deleted successfully",
+      data: result.rows[0],
+    });
+  }),
+);
 
 // 404 HANDLER
 app.use((req, res, next) => {
