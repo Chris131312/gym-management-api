@@ -98,6 +98,7 @@ function App() {
         onClose={() => setIsProfileOpen(false)}
         member={selectedMember}
         onMemberUpdated={triggerRefresh}
+        userRole={user?.role}
       />
     </div>
   );
