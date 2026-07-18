@@ -7,6 +7,7 @@ import {
   Clock,
   DollarSign,
   UserCheck,
+  AlertTriangle,
 } from "lucide-react";
 import {
   BarChart,
@@ -24,6 +25,8 @@ function Dashboard({ user }) {
   const [isLoadingCheckins, setIsLoadingCheckins] = useState(true);
   const [chartData, setChartData] = useState(null);
   const [isLoadingCharts, setIsLoadingCharts] = useState(true);
+  const [alerts, setAlerts] = useState(null);
+  const [isLoadingAlerts, setIsLoadingAlerts] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
