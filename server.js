@@ -400,6 +400,61 @@ app.put(
     });
   }),
 );
+// GET DASHBOARD ALERTS (expiring/expired memberships)
+app.get(
+  "/api/dashboard/alerts",
+  asyncHandler(protect),
+  restrictTo("admin"),
+  asyncHandler(async (req, res) => {
+    const result = await pool.query(`
+      SELECT
+        m.id AS member_id,
+        m.first_name,
+        m.last_name,
+        m.email,
+        ms.plan_name,
+        ms.end_date,
+        CASE
+          WHEN ms.end_date < CURRENT_DATE THEN 'expired'
+          WHEN ms.end_date <= CURRENT_DATE + INTERVAL '7 days' THEN 'expiring_soon'
+        END AS alert_type,
+        (ms.end_date - CURRENT_DATE) AS days_remaining
+      FROM members m
+      INNER JOIN memberships ms ON m.id = ms.member_id
+      WHERE ms.id = (
+        SELECT id FROM memberships
+        WHERE member_id = m.id
+        ORDER BY end_date DESC
+        LIMIT 1
+      )
+      AND ms.end_date BETWEEN CURRENT_DATE - INTERVAL '30 days'
+                          AND CURRENT_DATE + INTERVAL '7 days'
+      ORDER BY ms.end_date ASC
+    `);
+
+    const alerts = result.rows.map((row) => ({
+      memberId: row.member_id,
+      name: `${row.first_name} ${row.last_name}`,
+      email: row.email,
+      plan: row.plan_name,
+      endDate: row.end_date,
+      alertType: row.alert_type,
+      daysRemaining: parseInt(row.days_remaining),
+    }));
+
+    const expiringSoon = alerts.filter((a) => a.alertType === "expiring_soon");
+    const expired = alerts.filter((a) => a.alertType === "expired");
+
+    res.status(200).json({
+      success: true,
+      data: {
+        expiringSoon,
+        expired,
+        totalAlerts: alerts.length,
+      },
+    });
+  }),
+);
 
 // DELETE MEMBERSHIP (admin only)
 app.delete(
