@@ -54,6 +54,19 @@ function Dashboard({ user }) {
     };
     fetchCharts();
   }, []);
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const result = await api.get("/dashboard/alerts");
+        setAlerts(result.data);
+      } catch (error) {
+        console.error("Error fetching alerts:", error);
+      } finally {
+        setIsLoadingAlerts(false);
+      }
+    };
+    fetchAlerts();
+  }, []);
 
   useEffect(() => {
     const fetchRecentCheckins = async () => {
