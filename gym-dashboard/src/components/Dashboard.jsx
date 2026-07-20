@@ -322,6 +322,88 @@ function Dashboard({ user }) {
                   </p>
                 </div>
               )}
+
+              {/* Alerts Section */}
+              {!isLoadingAlerts && alerts && alerts.totalAlerts > 0 && (
+                <div className="mt-4 bg-white border border-gray-100 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-500" />
+                      Members Needing Attention
+                    </h2>
+                    <span className="text-xs text-gray-400">
+                      {alerts.totalAlerts} alert
+                      {alerts.totalAlerts !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {/* Expired memberships first (more urgent) */}
+                    {alerts.expired.map((alert) => (
+                      <div
+                        key={alert.memberId}
+                        className="flex items-center justify-between p-3 rounded-lg bg-red-50/50 border border-red-100"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-xs font-medium">
+                              {alert.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()
+                                .slice(0, 2)}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {alert.name}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {alert.plan}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded-full">
+                          Expired {Math.abs(alert.daysRemaining)}d ago
+                        </span>
+                      </div>
+                    ))}
+
+                    {/* Expiring soon */}
+                    {alerts.expiringSoon.map((alert) => (
+                      <div
+                        key={alert.memberId}
+                        className="flex items-center justify-between p-3 rounded-lg bg-amber-50/50 border border-amber-100"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-xs font-medium">
+                              {alert.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()
+                                .slice(0, 2)}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {alert.name}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {alert.plan}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-xs font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded-full">
+                          Expires in {alert.daysRemaining}d
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
