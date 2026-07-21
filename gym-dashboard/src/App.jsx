@@ -15,6 +15,7 @@ function App() {
   const [user, setUser] = useState(getUser());
   const [loggedIn, setLoggedIn] = useState(isAuthenticated());
 
+  const [alertCount, setAlertCount] = useState(0);
   // App state
   const [activeTab, setActiveTab] = useState(
     user?.role === "admin" ? "dashboard" : "check-in",
