@@ -40,6 +40,20 @@ function App() {
     setLoggedIn(false);
     setActiveTab("dashboard");
   };
+  useEffect(() => {
+    if (!loggedIn || user?.role !== "admin") return;
+
+    const fetchAlertCount = async () => {
+      try {
+        const result = await api.get("/dashboard/alerts");
+        setAlertCount(result.data?.totalAlerts || 0);
+      } catch (error) {
+        console.error("Error fetching alert count:", error);
+      }
+    };
+
+    fetchAlertCount();
+  }, [loggedIn, user]);
 
   // If not logged in, show login page
   if (!loggedIn) {
