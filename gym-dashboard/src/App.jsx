@@ -74,6 +74,7 @@ function App() {
         setActiveTab={setActiveTab}
         user={user}
         onLogout={handleLogout}
+        alertCount={alertCount}
       />
 
       <main className="flex-1 p-10 overflow-y-auto">
