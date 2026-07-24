@@ -36,7 +36,22 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout, alertCount }) {
       {/* Navigation */}
       <nav className="flex-1 px-3 py-2 space-y-1">
         {user?.role === "admin" && (
-          <NavItem id="dashboard" icon={LayoutDashboard} label="Overview" />
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm w-full transition-colors ${
+              activeTab === "dashboard"
+                ? "bg-gray-100 text-gray-900 font-semibold"
+                : "text-gray-500 hover:text-gray-900 hover:bg-gray-50 font-medium"
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
+            <span className="flex-1 text-left">Overview</span>
+            {alertCount > 0 && (
+              <span className="bg-red-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
+                {alertCount > 9 ? "9+" : alertCount}
+              </span>
+            )}
+          </button>
         )}
         <NavItem id="check-in" icon={ScanLine} label="Check-in" />
         <NavItem id="members" icon={Users} label="Members" />
