@@ -8,7 +8,7 @@ import {
   Shield,
 } from "lucide-react";
 
-function Sidebar({ activeTab, setActiveTab, user, onLogout }) {
+function Sidebar({ activeTab, setActiveTab, user, onLogout, alertCount }) {
   const NavItem = ({ id, icon: Icon, label }) => (
     <button
       onClick={() => setActiveTab(id)}
