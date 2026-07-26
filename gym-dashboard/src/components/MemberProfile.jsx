@@ -11,6 +11,7 @@ import {
   Loader2,
   Edit,
   Trash2,
+  Activity,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
