@@ -252,6 +252,36 @@ app.get(
     });
   }),
 );
+// GET CHECK-INS BY MEMBER
+app.get(
+  "/api/checkins/member/:member_id",
+  asyncHandler(protect),
+  asyncHandler(async (req, res) => {
+    const { member_id } = req.params;
+
+    const totalResult = await pool.query(
+      "SELECT COUNT(*) FROM check_ins WHERE member_id = $1",
+      [member_id],
+    );
+
+    const recentResult = await pool.query(
+      `SELECT id, check_in_time
+       FROM check_ins
+       WHERE member_id = $1
+       ORDER BY check_in_time DESC
+       LIMIT 30`,
+      [member_id],
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalCheckins: parseInt(totalResult.rows[0].count),
+        recent: recentResult.rows,
+      },
+    });
+  }),
+);
 
 // GET MEMBERSHIPS BY MEMBER ID
 app.get(
