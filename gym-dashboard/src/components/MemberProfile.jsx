@@ -55,6 +55,9 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
     }
   }, [isOpen, member]);
 
+  const [checkins, setCheckins] = useState(null);
+  const [isLoadingCheckins, setIsLoadingCheckins] = useState(true);
+
   const fetchMemberships = async () => {
     setIsLoading(true);
     try {
