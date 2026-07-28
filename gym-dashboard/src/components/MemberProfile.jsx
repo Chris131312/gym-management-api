@@ -48,6 +48,7 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
   useEffect(() => {
     if (isOpen && member) {
       fetchMemberships();
+      fetchCheckins();
       setStep("idle");
       setSelectedPlan("annual");
       setMembershipToEdit(null);
