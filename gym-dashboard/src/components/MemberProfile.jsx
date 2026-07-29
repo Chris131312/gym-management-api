@@ -70,6 +70,17 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
       setIsLoading(false);
     }
   };
+  const fetchCheckins = async () => {
+    setIsLoadingCheckins(true);
+    try {
+      const result = await api.get(`/checkins/member/${member.id}`);
+      setCheckins(result.data);
+    } catch (error) {
+      console.error("Error fetching check-ins:", error);
+    } finally {
+      setIsLoadingCheckins(false);
+    }
+  };
 
   const membershipStatus = useMemo(() => {
     if (memberships.length === 0) {
