@@ -260,6 +260,12 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
             onEdit={(m) => setMembershipToEdit(m)}
             onDelete={(m) => setMembershipToDelete(m)}
           />
+          {/* Check-in History */}
+          <CheckinHistory
+            checkins={checkins}
+            isLoading={isLoadingCheckins}
+            formatDate={formatDate}
+          />
         </div>
       </div>
 
