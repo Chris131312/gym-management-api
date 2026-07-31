@@ -44,6 +44,8 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
   const [membershipToEdit, setMembershipToEdit] = useState(null);
   const [membershipToDelete, setMembershipToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [checkins, setCheckins] = useState(null);
+  const [isLoadingCheckins, setIsLoadingCheckins] = useState(true);
 
   useEffect(() => {
     if (isOpen && member) {
@@ -56,9 +58,6 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
     }
   }, [isOpen, member]);
 
-  const [checkins, setCheckins] = useState(null);
-  const [isLoadingCheckins, setIsLoadingCheckins] = useState(true);
-
   const fetchMemberships = async () => {
     setIsLoading(true);
     try {
@@ -70,6 +69,7 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
       setIsLoading(false);
     }
   };
+
   const fetchCheckins = async () => {
     setIsLoadingCheckins(true);
     try {
@@ -260,6 +260,7 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
             onEdit={(m) => setMembershipToEdit(m)}
             onDelete={(m) => setMembershipToDelete(m)}
           />
+
           {/* Check-in History */}
           <CheckinHistory
             checkins={checkins}
@@ -729,6 +730,87 @@ function EditMembershipModal({
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+// ─── Check-in History ───────────────────────────────────────
+
+function CheckinHistory({ checkins, isLoading, formatDate }) {
+  const formatTime = (date) =>
+    new Date(date).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  const groupByDate = (checkinsArray) => {
+    const groups = {};
+    checkinsArray.forEach((checkin) => {
+      const date = new Date(checkin.check_in_time).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+      if (!groups[date]) groups[date] = [];
+      groups[date].push(checkin);
+    });
+    return groups;
+  };
+
+  return (
+    <div className="mt-8">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+          <Activity className="w-3.5 h-3.5" />
+          Check-in History
+        </h3>
+        {!isLoading && checkins && (
+          <span className="text-xs text-gray-400">
+            {checkins.totalCheckins} total
+          </span>
+        )}
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-10 bg-gray-50 animate-pulse rounded-lg" />
+          ))}
+        </div>
+      ) : !checkins || checkins.recent.length === 0 ? (
+        <div className="text-center p-8 bg-gray-50 rounded-xl">
+          <Activity className="w-8 h-8 text-gray-200 mx-auto mb-3" />
+          <p className="text-sm text-gray-400">No check-ins recorded yet.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {Object.entries(groupByDate(checkins.recent)).map(
+            ([date, entries]) => (
+              <div key={date}>
+                <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1.5 px-1">
+                  {date}
+                </p>
+                <div className="space-y-1">
+                  {entries.map((checkin) => (
+                    <div
+                      key={checkin.id}
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-700 flex-1">
+                        Check-in
+                      </span>
+                      <span className="text-xs text-gray-400 tabular-nums">
+                        {formatTime(checkin.check_in_time)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ),
+          )}
+        </div>
+      )}
     </div>
   );
 }
