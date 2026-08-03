@@ -5,6 +5,7 @@ const {
   NotFoundError,
   ConflictError,
   ForbiddenError,
+  UnauthorizedError,
 } = require("../utils/errors");
 
 const SALT_ROUNDS = 10;
