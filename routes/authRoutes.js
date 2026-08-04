@@ -11,6 +11,7 @@ const {
   getUsers,
   updateUser,
   deleteUser,
+  changePassword,
 } = require("../controllers/authController");
 
 // POST /api/auth/register (admin only)
