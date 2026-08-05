@@ -49,5 +49,10 @@ router.delete(
   restrictTo("admin"),
   asyncHandler(deleteUser),
 );
-
+// PUT /api/auth/change-password (authenticated users)
+router.put(
+  "/change-password",
+  asyncHandler(protect),
+  asyncHandler(changePassword),
+);
 module.exports = router;
