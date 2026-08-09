@@ -5,3 +5,170 @@
 body {
   background-color: #f3f4f6;
 }
+/* ─── Dark Mode Global Overrides ─────────────────────────── */
+
+/* Base transition for smooth theme switching */
+*,
+*::before,
+*::after {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/* Main backgrounds */
+.dark body,
+.dark .bg-gray-100 {
+  background-color: #0f172a !important;
+}
+
+.dark .bg-white {
+  background-color: #1e293b !important;
+}
+
+.dark .bg-gray-50,
+.dark .bg-gray-50\/50 {
+  background-color: #1e293b !important;
+}
+
+/* Card and container backgrounds */
+.dark .bg-emerald-50\/50 {
+  background-color: #064e3b33 !important;
+}
+
+.dark .bg-red-50\/50,
+.dark .bg-red-50 {
+  background-color: #7f1d1d33 !important;
+}
+
+.dark .bg-amber-50\/50,
+.dark .bg-amber-50 {
+  background-color: #78350f33 !important;
+}
+
+/* Text colors */
+.dark .text-gray-900 {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-gray-800 {
+  color: #e2e8f0 !important;
+}
+
+.dark .text-gray-700 {
+  color: #cbd5e1 !important;
+}
+
+.dark .text-gray-600 {
+  color: #94a3b8 !important;
+}
+
+.dark .text-gray-500 {
+  color: #64748b !important;
+}
+
+.dark .text-gray-400 {
+  color: #475569 !important;
+}
+
+/* Border colors */
+.dark .border-gray-100,
+.dark .border-gray-200 {
+  border-color: #334155 !important;
+}
+
+.dark .border-gray-50 {
+  border-color: #1e293b !important;
+}
+
+.dark .border-emerald-200 {
+  border-color: #065f4633 !important;
+}
+
+.dark .border-red-100,
+.dark .border-red-200 {
+  border-color: #7f1d1d44 !important;
+}
+
+.dark .border-amber-100 {
+  border-color: #78350f44 !important;
+}
+
+/* Inputs */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #475569 !important;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: transparent !important;
+  --tw-ring-color: #f1f5f9 !important;
+}
+
+/* Sidebar border */
+.dark .border-r {
+  border-color: #334155 !important;
+}
+
+.dark .border-t {
+  border-color: #334155 !important;
+}
+
+.dark .border-b {
+  border-color: #334155 !important;
+}
+
+/* Hover states */
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-gray-100:hover,
+.dark .hover\:bg-gray-50\/50:hover {
+  background-color: #334155 !important;
+}
+
+.dark .hover\:bg-gray-200:hover {
+  background-color: #475569 !important;
+}
+
+/* Active nav state */
+.dark .bg-gray-100.text-gray-900 {
+  background-color: #334155 !important;
+}
+
+/* Loading skeletons */
+.dark .animate-pulse .bg-gray-100,
+.dark .animate-pulse .bg-gray-200 {
+  background-color: #334155 !important;
+}
+
+/* Modals backdrop */
+.dark .bg-black\/50 {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Accent inversions (gray-900 buttons stay the same, they look good in dark) */
+/* Role badges that use bg-gray-100 */
+.dark .bg-gray-100.text-gray-600 {
+  background-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+/* Recharts dark mode */
+.dark .recharts-cartesian-axis-tick-value {
+  fill: #64748b !important;
+}
+
+.dark .recharts-default-tooltip {
+  background-color: #0f172a !important;
+  border: 1px solid #334155 !important;
+}
