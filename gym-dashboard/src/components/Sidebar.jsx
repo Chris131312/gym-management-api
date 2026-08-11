@@ -7,16 +7,25 @@ import {
   LogOut,
   Shield,
   Key,
+  Moon,
+  Sun,
   X,
   Loader2,
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
 import { api } from "../api/client";
+import { getTheme, toggleTheme } from "../utils/theme";
 import toast from "react-hot-toast";
 
 function Sidebar({ activeTab, setActiveTab, user, onLogout, alertCount }) {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState(getTheme());
+
+  const handleToggleTheme = () => {
+    const newTheme = toggleTheme();
+    setCurrentTheme(newTheme);
+  };
 
   const NavItem = ({ id, icon: Icon, label }) => (
     <button
@@ -79,6 +88,20 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout, alertCount }) {
 
         {/* User Section */}
         <div className="p-3 border-t border-gray-100">
+          {/* Theme Toggle */}
+          <button
+            onClick={handleToggleTheme}
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm w-full text-gray-500 hover:text-gray-900 hover:bg-gray-50 font-medium transition-colors mb-1"
+          >
+            {currentTheme === "dark" ? (
+              <Sun className="w-4 h-4" />
+            ) : (
+              <Moon className="w-4 h-4" />
+            )}
+            {currentTheme === "dark" ? "Light Mode" : "Dark Mode"}
+          </button>
+
+          {/* User Info */}
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors group">
             <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-white text-xs font-medium">
@@ -113,7 +136,6 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout, alertCount }) {
         </div>
       </aside>
 
-      {/* Change Password Modal */}
       <ChangePasswordModal
         isOpen={isPasswordModalOpen}
         onClose={() => setIsPasswordModalOpen(false)}
@@ -312,4 +334,3 @@ function ChangePasswordModal({ isOpen, onClose }) {
 }
 
 export default Sidebar;
-//Side Bar.jsx
