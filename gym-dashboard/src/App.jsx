@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { initTheme } from "./utils/theme";
 import { isAuthenticated, getUser, clearAuth } from "./utils/auth";
 import LoginPage from "./components/LoginPage";
 import Sidebar from "./components/Sidebar";
@@ -10,6 +11,8 @@ import MemberProfile from "./components/MemberProfile";
 import { Toaster } from "react-hot-toast";
 import StaffPage from "./components/StaffPage";
 
+// Initialize theme before render
+initTheme();
 function App() {
   // Auth state
   const [user, setUser] = useState(getUser());
