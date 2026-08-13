@@ -94,8 +94,28 @@ const login = async (req, res) => {
 };
 
 const getUsers = async (req, res) => {
+  const search = req.query.search || "";
+
+  const conditions = [];
+  const params = [];
+
+  if (search.trim()) {
+    conditions.push(`(
+      full_name ILIKE $1
+      OR email ILIKE $1
+      OR role ILIKE $1
+    )`);
+    params.push(`%${search.trim()}%`);
+  }
+
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
   const result = await pool.query(
-    "SELECT id, email, full_name, role, is_active, created_at FROM users ORDER BY created_at DESC",
+    `SELECT id, email, full_name, role, is_active, created_at
+     FROM users ${whereClause}
+     ORDER BY created_at DESC`,
+    params,
   );
 
   res.status(200).json({
