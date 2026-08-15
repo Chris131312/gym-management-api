@@ -8,6 +8,7 @@ import {
   X,
   Loader2,
   AlertCircle,
+  Search,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -18,11 +19,25 @@ function StaffPage({ currentUserId }) {
   const [userToEdit, setUserToEdit] = useState(null);
   const [userToDelete, setUserToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const result = await api.get("/auth/users");
+      const params = new URLSearchParams({
+        ...(debouncedSearch && { search: debouncedSearch }),
+      });
+      const query = params.toString();
+      const result = await api.get(`/auth/users${query ? `?${query}` : ""}`);
       setUsers(result.data || []);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -33,7 +48,7 @@ function StaffPage({ currentUserId }) {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [debouncedSearch]);
 
   const handleDelete = async () => {
     if (!userToDelete) return;
@@ -87,7 +102,7 @@ function StaffPage({ currentUserId }) {
           <p className="text-gray-400 text-sm mt-1">
             {isLoading
               ? "Loading..."
-              : `${users.length} team member${users.length !== 1 ? "s" : ""}`}
+              : `${users.length} team member${users.length !== 1 ? "s" : ""}${debouncedSearch ? " found" : ""}`}
           </p>
         </div>
         <button
@@ -97,6 +112,20 @@ function StaffPage({ currentUserId }) {
           <UserPlus className="w-4 h-4" />
           Add User
         </button>
+      </div>
+
+      {/* Search */}
+      <div className="mb-6 relative">
+        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+          <Search className="h-4 w-4 text-gray-400" />
+        </div>
+        <input
+          type="text"
+          placeholder="Search by name, email or role..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="block w-full pl-10 pr-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+        />
       </div>
 
       {/* Table */}
@@ -145,19 +174,33 @@ function StaffPage({ currentUserId }) {
             ) : users.length === 0 ? (
               <tr>
                 <td colSpan="4" className="px-5 py-16 text-center">
-                  <Shield className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-                  <p className="text-sm font-medium text-gray-900 mb-1">
-                    No team members yet
-                  </p>
-                  <p className="text-xs text-gray-400 mb-4">
-                    Add your first staff member to get started.
-                  </p>
-                  <button
-                    onClick={handleOpenCreate}
-                    className="text-sm text-gray-900 font-medium underline underline-offset-4 hover:text-gray-600 transition-colors"
-                  >
-                    Add your first team member
-                  </button>
+                  {debouncedSearch ? (
+                    <div>
+                      <Search className="w-8 h-8 text-gray-200 mx-auto mb-3" />
+                      <p className="text-sm font-medium text-gray-900 mb-1">
+                        No results for "{debouncedSearch}"
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Try a different search term.
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <Shield className="w-8 h-8 text-gray-200 mx-auto mb-3" />
+                      <p className="text-sm font-medium text-gray-900 mb-1">
+                        No team members yet
+                      </p>
+                      <p className="text-xs text-gray-400 mb-4">
+                        Add your first staff member to get started.
+                      </p>
+                      <button
+                        onClick={handleOpenCreate}
+                        className="text-sm text-gray-900 font-medium underline underline-offset-4 hover:text-gray-600 transition-colors"
+                      >
+                        Add your first team member
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ) : (
