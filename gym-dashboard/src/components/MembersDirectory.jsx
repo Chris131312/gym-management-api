@@ -282,7 +282,7 @@ function MembersDirectory({
                       </button>
                       {userRole === "admin" && (
                         <button
-                          onClick={() => setMemberToDelete(member.id)}
+                          onClick={() => setMemberToDelete(member)}
                           className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete Member"
                         >
