@@ -68,7 +68,7 @@ function MembersDirectory({
   const handleDelete = async () => {
     if (!memberToDelete) return;
     try {
-      await api.del(`/members/${memberToDelete}`);
+      await api.del(`/members/${memberToDelete.id}`);
       setMemberToDelete(null);
       fetchPaginatedMembers();
       toast.success("Member deleted");
