@@ -336,6 +336,12 @@ function MembersDirectory({
         isOpen={memberToDelete !== null}
         onClose={() => setMemberToDelete(null)}
         onConfirm={handleDelete}
+        title="Delete Member"
+        name={
+          memberToDelete
+            ? `${memberToDelete.first_name} ${memberToDelete.last_name}`
+            : ""
+        }
       />
     </div>
   );
