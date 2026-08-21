@@ -6,6 +6,7 @@ validateEnv();
 const express = require("express");
 const cors = require("cors");
 const pool = require("./config/db");
+const memberRoutes = require("./routes/memberRoutes");
 
 const validate = require("./middleware/validate");
 const asyncHandler = require("./middleware/asyncHandler");
