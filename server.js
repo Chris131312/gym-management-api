@@ -38,6 +38,7 @@ app.use(
 );
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/members", memberRoutes);
 
 // Health Check
 app.get("/api/health", (req, res) => {
