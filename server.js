@@ -20,6 +20,7 @@ const { NotFoundError, ForbiddenError } = require("./utils/errors");
 const authRoutes = require("./routes/authRoutes");
 const protect = require("./middleware/protect");
 const restrictTo = require("./middleware/restrictTo");
+const membershipRoutes = require("./routes/membershipRoutes");
 const { success } = require("zod");
 
 const app = express();
