@@ -522,6 +522,8 @@ app.use((req, res, next) => {
 // ERROR HANDLER
 app.use(errorHandler);
 
+app.use("/api/memberships", membershipRoutes);
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
