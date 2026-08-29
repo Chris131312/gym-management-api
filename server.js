@@ -1,5 +1,5 @@
 require("dotenv").config();
-
+const checkinRoutes = require("./routes/checkinRoutes");
 const validateEnv = require("./config/validateEnv");
 validateEnv();
 
