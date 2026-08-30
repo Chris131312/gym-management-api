@@ -523,6 +523,7 @@ app.use((req, res, next) => {
 app.use(errorHandler);
 
 app.use("/api/memberships", membershipRoutes);
+app.use("/api/checkins", checkinRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
