@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const { logAction } = require("../utils/auditLog");
 const { NotFoundError } = require("../utils/errors");
 
 const createMember = async (req, res) => {
