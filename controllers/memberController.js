@@ -115,17 +115,21 @@ const deleteMember = async (req, res) => {
     throw new NotFoundError("Member");
   }
 
+  const member = deletedMember.rows[0];
+
+  await logAction({
+    userId: req.user.id,
+    userName: req.user.full_name,
+    action: "delete",
+    entityType: "member",
+    entityId: member.id,
+    entityLabel: `${member.first_name} ${member.last_name}`,
+    details: { email: member.email, phone: member.phone_number },
+  });
+
   res.status(200).json({
     success: true,
     message: "Member deleted successfully!",
-    data: deletedMember.rows[0],
+    data: member,
   });
-};
-
-module.exports = {
-  createMember,
-  getMembers,
-  getMemberById,
-  updateMember,
-  deleteMember,
 };
