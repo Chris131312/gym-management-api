@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const { NotFoundError } = require("../utils/errors");
+const { logAction } = require("../utils/auditLog");
 
 const getMembershipsByMember = async (req, res) => {
   const { member_id } = req.params;
