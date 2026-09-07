@@ -66,10 +66,22 @@ const deleteMembership = async (req, res) => {
     throw new NotFoundError("Membership");
   }
 
+  const membership = result.rows[0];
+
+  await logAction({
+    userId: req.user.id,
+    userName: req.user.full_name,
+    action: "delete",
+    entityType: "membership",
+    entityId: membership.id,
+    entityLabel: membership.plan_name,
+    details: { price: membership.price, member_id: membership.member_id },
+  });
+
   res.status(200).json({
     success: true,
     message: "Membership deleted successfully",
-    data: result.rows[0],
+    data: membership,
   });
 };
 
