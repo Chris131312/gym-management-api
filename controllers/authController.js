@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
+const { logAction } = require("../utils/auditLog");
 const {
   NotFoundError,
   ConflictError,
