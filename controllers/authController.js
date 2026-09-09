@@ -158,7 +158,6 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   const { id } = req.params;
 
-  // Prevent admin from deleting themselves
   if (parseInt(id) === req.user.id) {
     throw new ForbiddenError("You cannot delete your own account");
   }
@@ -172,10 +171,22 @@ const deleteUser = async (req, res) => {
     throw new NotFoundError("User");
   }
 
+  const deletedUser = result.rows[0];
+
+  await logAction({
+    userId: req.user.id,
+    userName: req.user.full_name,
+    action: "delete",
+    entityType: "user",
+    entityId: deletedUser.id,
+    entityLabel: deletedUser.full_name,
+    details: { email: deletedUser.email },
+  });
+
   res.status(200).json({
     success: true,
     message: "User deleted successfully",
-    data: result.rows[0],
+    data: deletedUser,
   });
 };
 const changePassword = async (req, res) => {
