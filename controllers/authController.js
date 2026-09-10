@@ -41,6 +41,17 @@ const register = async (req, res) => {
   );
 
   const newUser = result.rows[0];
+
+  await logAction({
+    userId: req.user?.id || null,
+    userName: req.user?.full_name || "System",
+    action: "create",
+    entityType: "user",
+    entityId: newUser.id,
+    entityLabel: newUser.full_name,
+    details: { email: newUser.email, role: newUser.role },
+  });
+
   const token = generateToken(newUser);
 
   res.status(201).json({
