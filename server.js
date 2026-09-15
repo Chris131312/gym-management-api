@@ -16,6 +16,7 @@ const memberRoutes = require("./routes/memberRoutes");
 const membershipRoutes = require("./routes/membershipRoutes");
 const checkinRoutes = require("./routes/checkinRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const auditRoutes = require("./routes/auditRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
