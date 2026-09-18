@@ -9,6 +9,7 @@ import {
   Key,
   Moon,
   Sun,
+  ScrollText,
   X,
   Loader2,
   AlertCircle,
