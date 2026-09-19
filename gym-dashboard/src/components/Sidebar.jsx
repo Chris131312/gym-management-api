@@ -83,6 +83,7 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout, alertCount }) {
                 Admin
               </p>
               <NavItem id="staff" icon={Shield} label="Staff" />
+              <NavItem id="audit" icon={ScrollText} label="Activity Log" />
             </>
           )}
         </nav>
