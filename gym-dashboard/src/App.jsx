@@ -10,7 +10,7 @@ import MembersDirectory from "./components/MembersDirectory";
 import MemberProfile from "./components/MemberProfile";
 import { Toaster } from "react-hot-toast";
 import StaffPage from "./components/StaffPage";
-
+import AuditLogPage from "./components/AuditLogPage";
 // Initialize theme before render
 initTheme();
 function App() {
