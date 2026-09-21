@@ -103,6 +103,7 @@ function App() {
           />
         )}
         {activeTab === "staff" && <StaffPage currentUserId={user?.id} />}
+        {activeTab === "audit" && <AuditLogPage />}
       </main>
 
       <MemberModal
