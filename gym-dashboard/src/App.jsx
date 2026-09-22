@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { initTheme } from "./utils/theme";
 import { isAuthenticated, getUser, clearAuth } from "./utils/auth";
+import { api } from "./api/client";
 import LoginPage from "./components/LoginPage";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
@@ -8,17 +9,18 @@ import MemberModal from "./components/MemberModal";
 import CheckInScanner from "./components/CheckInScanner";
 import MembersDirectory from "./components/MembersDirectory";
 import MemberProfile from "./components/MemberProfile";
-import { Toaster } from "react-hot-toast";
 import StaffPage from "./components/StaffPage";
 import AuditLogPage from "./components/AuditLogPage";
+import { Toaster } from "react-hot-toast";
+
 // Initialize theme before render
 initTheme();
+
 function App() {
   // Auth state
   const [user, setUser] = useState(getUser());
   const [loggedIn, setLoggedIn] = useState(isAuthenticated());
 
-  const [alertCount, setAlertCount] = useState(0);
   // App state
   const [activeTab, setActiveTab] = useState(
     user?.role === "admin" ? "dashboard" : "check-in",
@@ -32,17 +34,9 @@ function App() {
   const [refreshKey, setRefreshKey] = useState(0);
   const triggerRefresh = () => setRefreshKey((prev) => prev + 1);
 
-  const handleLoginSuccess = (userData) => {
-    setUser(userData);
-    setLoggedIn(true);
-  };
+  // Alert count for sidebar badge
+  const [alertCount, setAlertCount] = useState(0);
 
-  const handleLogout = () => {
-    clearAuth();
-    setUser(null);
-    setLoggedIn(false);
-    setActiveTab("dashboard");
-  };
   useEffect(() => {
     if (!loggedIn || user?.role !== "admin") return;
 
@@ -57,6 +51,19 @@ function App() {
 
     fetchAlertCount();
   }, [loggedIn, user]);
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    setLoggedIn(true);
+    setActiveTab(userData?.role === "admin" ? "dashboard" : "check-in");
+  };
+
+  const handleLogout = () => {
+    clearAuth();
+    setUser(null);
+    setLoggedIn(false);
+    setActiveTab("dashboard");
+  };
 
   // If not logged in, show login page
   if (!loggedIn) {
@@ -81,7 +88,9 @@ function App() {
       />
 
       <main className="flex-1 p-10 overflow-y-auto">
-        {activeTab === "dashboard" && <Dashboard user={user} />}
+        {activeTab === "dashboard" && user?.role === "admin" && (
+          <Dashboard user={user} />
+        )}
 
         {activeTab === "check-in" && <CheckInScanner />}
 
@@ -99,11 +108,16 @@ function App() {
               setSelectedMember(member);
               setIsProfileOpen(true);
             }}
+            refreshKey={refreshKey}
             userRole={user?.role}
           />
         )}
-        {activeTab === "staff" && <StaffPage currentUserId={user?.id} />}
-        {activeTab === "audit" && <AuditLogPage />}
+
+        {activeTab === "staff" && user?.role === "admin" && (
+          <StaffPage currentUserId={user?.id} />
+        )}
+
+        {activeTab === "audit" && user?.role === "admin" && <AuditLogPage />}
       </main>
 
       <MemberModal
