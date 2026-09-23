@@ -133,3 +133,11 @@ const deleteMember = async (req, res) => {
     data: member,
   });
 };
+
+module.exports = {
+  createMember,
+  getMembers,
+  getMemberById,
+  updateMember,
+  deleteMember,
+};

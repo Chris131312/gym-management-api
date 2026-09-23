@@ -1,13 +1,13 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
-const { logAction } = require("../utils/auditLog");
 const {
   NotFoundError,
   ConflictError,
   ForbiddenError,
   UnauthorizedError,
 } = require("../utils/errors");
+const { logAction } = require("../utils/auditLog");
 
 const SALT_ROUNDS = 10;
 
@@ -64,28 +64,6 @@ const register = async (req, res) => {
   });
 };
 
-const newUser = result.rows[0];
-
-await logAction({
-  userId: req.user?.id || null,
-  userName: req.user?.full_name || "System",
-  action: "create",
-  entityType: "user",
-  entityId: newUser.id,
-  entityLabel: newUser.full_name,
-  details: { email: newUser.email, role: newUser.role },
-});
-
-const token = generateToken(newUser);
-
-res.status(201).json({
-  success: true,
-  message: "User registered successfully",
-  data: {
-    user: newUser,
-    token,
-  },
-});
 const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -94,19 +72,21 @@ const login = async (req, res) => {
   ]);
 
   if (result.rows.length === 0) {
-    throw new NotFoundError("Invalid email or password");
+    throw new UnauthorizedError("Invalid email or password");
   }
 
   const user = result.rows[0];
 
   if (!user.is_active) {
-    throw new NotFoundError("Account is deactivated. Contact an administrator");
+    throw new UnauthorizedError(
+      "Account is deactivated. Contact an administrator",
+    );
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
   if (!isPasswordValid) {
-    throw new NotFoundError("Invalid email or password");
+    throw new UnauthorizedError("Invalid email or password");
   }
 
   const token = generateToken(user);
@@ -157,11 +137,11 @@ const getUsers = async (req, res) => {
     data: result.rows,
   });
 };
+
 const updateUser = async (req, res) => {
   const { id } = req.params;
   const { full_name, email, role, is_active } = req.body;
 
-  // Prevent admin from changing their own role
   if (parseInt(id) === req.user.id && role && role !== req.user.role) {
     throw new ForbiddenError("You cannot change your own role");
   }
@@ -222,11 +202,11 @@ const deleteUser = async (req, res) => {
     data: deletedUser,
   });
 };
+
 const changePassword = async (req, res) => {
   const { currentPassword, newPassword } = req.body;
   const userId = req.user.id;
 
-  // 1. Get user with password hash
   const result = await pool.query("SELECT * FROM users WHERE id = $1", [
     userId,
   ]);
@@ -237,7 +217,6 @@ const changePassword = async (req, res) => {
 
   const user = result.rows[0];
 
-  // 2. Verify current password
   const isCurrentValid = await bcrypt.compare(
     currentPassword,
     user.password_hash,
@@ -247,7 +226,6 @@ const changePassword = async (req, res) => {
     throw new UnauthorizedError("Current password is incorrect");
   }
 
-  // 3. Hash new password and update
   const newHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
   await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [
@@ -260,6 +238,7 @@ const changePassword = async (req, res) => {
     message: "Password changed successfully",
   });
 };
+
 module.exports = {
   register,
   login,
