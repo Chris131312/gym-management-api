@@ -38,6 +38,7 @@ app.use("/api/members", memberRoutes);
 app.use("/api/memberships", membershipRoutes);
 app.use("/api/checkins", checkinRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/audit-logs", auditRoutes);
 
 // 404 HANDLER
 app.use((req, res, next) => {
@@ -50,4 +51,3 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-app.use("/api/audit-logs", auditRoutes);
