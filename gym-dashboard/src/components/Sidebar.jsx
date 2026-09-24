@@ -19,6 +19,29 @@ import { api } from "../api/client";
 import { getTheme, toggleTheme } from "../utils/theme";
 import toast from "react-hot-toast";
 
+// ─── Nav Item (declared OUTSIDE Sidebar to avoid re-creation on render) ────
+
+function NavItem({ id, icon: Icon, label, activeTab, onSelect, badge }) {
+  const isActive = activeTab === id;
+
+  return (
+    <button
+      onClick={() => onSelect(id)}
+      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm w-full transition-colors ${
+        isActive
+          ? "bg-gray-100 text-gray-900 font-semibold"
+          : "text-gray-500 hover:text-gray-900 hover:bg-gray-50 font-medium"
+      }`}
+    >
+      <Icon className="w-4 h-4 flex-shrink-0" />
+      <span className="flex-1 text-left">{label}</span>
+      {badge}
+    </button>
+  );
+}
+
+// ─── Sidebar ─────────────────────────────────────────────────
+
 function Sidebar({ activeTab, setActiveTab, user, onLogout, alertCount }) {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(getTheme());
@@ -27,20 +50,6 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout, alertCount }) {
     const newTheme = toggleTheme();
     setCurrentTheme(newTheme);
   };
-
-  const NavItem = ({ id, icon: Icon, label }) => (
-    <button
-      onClick={() => setActiveTab(id)}
-      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm w-full transition-colors ${
-        activeTab === id
-          ? "bg-gray-100 text-gray-900 font-semibold"
-          : "text-gray-500 hover:text-gray-900 hover:bg-gray-50 font-medium"
-      }`}
-    >
-      <Icon className="w-4 h-4 flex-shrink-0" />
-      {label}
-    </button>
-  );
 
   return (
     <>
@@ -56,25 +65,35 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout, alertCount }) {
         {/* Navigation */}
         <nav className="flex-1 px-3 py-2 space-y-1">
           {user?.role === "admin" && (
-            <button
-              onClick={() => setActiveTab("dashboard")}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm w-full transition-colors ${
-                activeTab === "dashboard"
-                  ? "bg-gray-100 text-gray-900 font-semibold"
-                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-50 font-medium"
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
-              <span className="flex-1 text-left">Overview</span>
-              {alertCount > 0 && (
-                <span className="bg-red-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
-                  {alertCount > 9 ? "9+" : alertCount}
-                </span>
-              )}
-            </button>
+            <NavItem
+              id="dashboard"
+              icon={LayoutDashboard}
+              label="Overview"
+              activeTab={activeTab}
+              onSelect={setActiveTab}
+              badge={
+                alertCount > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
+                    {alertCount > 9 ? "9+" : alertCount}
+                  </span>
+                )
+              }
+            />
           )}
-          <NavItem id="check-in" icon={ScanLine} label="Check-in" />
-          <NavItem id="members" icon={Users} label="Members" />
+          <NavItem
+            id="check-in"
+            icon={ScanLine}
+            label="Check-in"
+            activeTab={activeTab}
+            onSelect={setActiveTab}
+          />
+          <NavItem
+            id="members"
+            icon={Users}
+            label="Members"
+            activeTab={activeTab}
+            onSelect={setActiveTab}
+          />
 
           {user?.role === "admin" && (
             <>
@@ -82,8 +101,20 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout, alertCount }) {
               <p className="px-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
                 Admin
               </p>
-              <NavItem id="staff" icon={Shield} label="Staff" />
-              <NavItem id="audit" icon={ScrollText} label="Activity Log" />
+              <NavItem
+                id="staff"
+                icon={Shield}
+                label="Staff"
+                activeTab={activeTab}
+                onSelect={setActiveTab}
+              />
+              <NavItem
+                id="audit"
+                icon={ScrollText}
+                label="Activity Log"
+                activeTab={activeTab}
+                onSelect={setActiveTab}
+              />
             </>
           )}
         </nav>
