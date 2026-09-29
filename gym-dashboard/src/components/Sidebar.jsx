@@ -10,6 +10,7 @@ import {
   Moon,
   Sun,
   ScrollText,
+  Settings,
   X,
   Loader2,
   AlertCircle,
