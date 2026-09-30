@@ -116,6 +116,13 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout, alertCount }) {
                 activeTab={activeTab}
                 onSelect={setActiveTab}
               />
+              <NavItem
+                id="settings"
+                icon={Settings}
+                label="Settings"
+                activeTab={activeTab}
+                onSelect={setActiveTab}
+              />
             </>
           )}
         </nav>
