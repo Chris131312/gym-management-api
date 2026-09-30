@@ -12,6 +12,7 @@ import MemberProfile from "./components/MemberProfile";
 import StaffPage from "./components/StaffPage";
 import AuditLogPage from "./components/AuditLogPage";
 import { Toaster } from "react-hot-toast";
+import SettingsPage from "./components/SettingsPage";
 
 // Initialize theme before render
 initTheme();
@@ -118,6 +119,7 @@ function App() {
         )}
 
         {activeTab === "audit" && user?.role === "admin" && <AuditLogPage />}
+        {activeTab === "settings" && user?.role === "admin" && <SettingsPage />}
       </main>
 
       <MemberModal
