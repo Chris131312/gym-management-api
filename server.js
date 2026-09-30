@@ -40,6 +40,7 @@ app.use("/api/memberships", membershipRoutes);
 app.use("/api/checkins", checkinRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/audit-logs", auditRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // 404 HANDLER
 app.use((req, res, next) => {
