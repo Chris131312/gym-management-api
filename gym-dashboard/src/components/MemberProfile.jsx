@@ -15,32 +15,16 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-const PLANS = {
-  monthly: {
-    id: "monthly",
-    name: "Monthly Plan",
-    price: 30.0,
-    period: "month",
-    durationMonths: 1,
-    description: "Renews monthly",
-  },
-  annual: {
-    id: "annual",
-    name: "Annual Plan",
-    price: 300.0,
-    period: "year",
-    durationMonths: 12,
-    description: "$25/month equivalent",
-    badge: "Save $60",
-    recommended: true,
-  },
-};
-
 function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
   const [memberships, setMemberships] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState("idle");
-  const [selectedPlan, setSelectedPlan] = useState("annual");
+
+  // Dynamic plans (from /settings/plans instead of hardcoded)
+  const [plans, setPlans] = useState([]);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(true);
+  const [selectedPlanId, setSelectedPlanId] = useState(null);
+
   const [membershipToEdit, setMembershipToEdit] = useState(null);
   const [membershipToDelete, setMembershipToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -51,8 +35,8 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
     if (isOpen && member) {
       fetchMemberships();
       fetchCheckins();
+      fetchPlans();
       setStep("idle");
-      setSelectedPlan("annual");
       setMembershipToEdit(null);
       setMembershipToDelete(null);
     }
@@ -82,6 +66,29 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
     }
   };
 
+  const fetchPlans = async () => {
+    setIsLoadingPlans(true);
+    try {
+      const result = await api.get("/settings/plans");
+      const activePlans = result.data || [];
+      setPlans(activePlans);
+
+      // Default to the longest plan (mirrors the old "annual" default)
+      if (activePlans.length > 0) {
+        const longest = activePlans.reduce((a, b) =>
+          b.duration_months > a.duration_months ? b : a,
+        );
+        setSelectedPlanId(longest.id);
+      }
+    } catch (error) {
+      toast.error("Failed to load membership plans");
+    } finally {
+      setIsLoadingPlans(false);
+    }
+  };
+
+  const selectedPlan = plans.find((p) => p.id === selectedPlanId);
+
   const membershipStatus = useMemo(() => {
     if (memberships.length === 0) {
       return { isActive: false, daysRemaining: 0, activeMembership: null };
@@ -107,10 +114,11 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
   }, [memberships]);
 
   const newPlanDates = useMemo(() => {
-    const plan = PLANS[selectedPlan];
+    if (!selectedPlan) return null;
+
     const start = new Date();
     const end = new Date();
-    end.setMonth(end.getMonth() + plan.durationMonths);
+    end.setMonth(end.getMonth() + selectedPlan.duration_months);
 
     return {
       startDate: start,
@@ -121,20 +129,22 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
   }, [selectedPlan]);
 
   const handleConfirmPayment = async () => {
+    if (!selectedPlan || !newPlanDates) return;
     setStep("processing");
 
-    const plan = PLANS[selectedPlan];
     const payload = {
       member_id: member.id,
-      plan_name: plan.name,
-      price: plan.price,
+      plan_name: selectedPlan.name,
+      price: parseFloat(selectedPlan.price),
       start_date: newPlanDates.startDateISO,
       end_date: newPlanDates.endDateISO,
     };
 
     try {
       await api.post("/memberships", payload);
-      toast.success(`Payment of $${plan.price} processed successfully`);
+      toast.success(
+        `Payment of $${parseFloat(selectedPlan.price).toFixed(2)} processed successfully`,
+      );
       await fetchMemberships();
       setStep("idle");
       onMemberUpdated();
@@ -208,27 +218,34 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
           {step === "idle" && (
             <button
               onClick={() => setStep("select")}
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium py-3 rounded-xl flex justify-center items-center gap-2 transition-colors mb-8"
+              disabled={isLoadingPlans || plans.length === 0}
+              className="w-full bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium py-3 rounded-xl flex justify-center items-center gap-2 transition-colors mb-8 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <CreditCard className="w-4 h-4" />
-              {membershipStatus.isActive
-                ? "Renew Membership"
-                : "Sell Membership"}
+              {isLoadingPlans
+                ? "Loading plans..."
+                : plans.length === 0
+                  ? "No plans available"
+                  : membershipStatus.isActive
+                    ? "Renew Membership"
+                    : "Sell Membership"}
             </button>
           )}
 
           {step === "select" && (
             <PlanSelector
-              selectedPlan={selectedPlan}
-              onSelectPlan={setSelectedPlan}
+              plans={plans}
+              selectedPlanId={selectedPlanId}
+              onSelectPlan={setSelectedPlanId}
               onCancel={() => setStep("idle")}
               onContinue={() => setStep("confirm")}
+              formatCurrency={formatCurrency}
             />
           )}
 
-          {step === "confirm" && (
+          {step === "confirm" && selectedPlan && newPlanDates && (
             <PaymentSummary
-              plan={PLANS[selectedPlan]}
+              plan={selectedPlan}
               dates={newPlanDates}
               formatDate={formatDate}
               formatCurrency={formatCurrency}
@@ -376,17 +393,34 @@ function MembershipBadge({ status }) {
   );
 }
 
-// ─── Plan Selector ──────────────────────────────────────────
+// ─── Plan Selector (now dynamic) ─────────────────────────────
 
-function PlanSelector({ selectedPlan, onSelectPlan, onCancel, onContinue }) {
+function PlanSelector({
+  plans,
+  selectedPlanId,
+  onSelectPlan,
+  onCancel,
+  onContinue,
+  formatCurrency,
+}) {
+  const longestDuration = Math.max(...plans.map((p) => p.duration_months));
+
+  const formatPeriod = (months) => {
+    if (months % 12 === 0) return `${months / 12}yr`;
+    return `${months}mo`;
+  };
+
   return (
     <div className="mb-8">
       <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
         Choose plan
       </h3>
       <div className="grid grid-cols-2 gap-3 mb-4">
-        {Object.values(PLANS).map((plan) => {
-          const isSelected = selectedPlan === plan.id;
+        {plans.map((plan) => {
+          const isSelected = selectedPlanId === plan.id;
+          const isBestValue =
+            plan.duration_months === longestDuration && plans.length > 1;
+
           return (
             <button
               key={plan.id}
@@ -398,21 +432,22 @@ function PlanSelector({ selectedPlan, onSelectPlan, onCancel, onContinue }) {
                   : "border-gray-200 bg-white hover:border-gray-300"
               }`}
             >
-              {plan.badge && (
+              {isBestValue && (
                 <span className="absolute -top-2 right-3 bg-gray-900 text-white text-xs font-medium px-2 py-0.5 rounded-md">
-                  {plan.badge}
+                  Best Value
                 </span>
               )}
-              <p className="text-xs text-gray-500 capitalize mb-1">
-                {plan.period}ly
+              <p className="text-xs text-gray-500 mb-1">
+                {formatPeriod(plan.duration_months)}
               </p>
               <div className="flex items-baseline gap-1 mb-2">
                 <span className="text-2xl font-bold text-gray-900 tracking-tight">
-                  ${plan.price}
+                  {formatCurrency(plan.price)}
                 </span>
-                <span className="text-xs text-gray-400">/ {plan.period}</span>
               </div>
-              <p className="text-xs text-gray-400">{plan.description}</p>
+              <p className="text-xs text-gray-400 truncate">
+                {plan.description || plan.name}
+              </p>
             </button>
           );
         })}
@@ -428,7 +463,8 @@ function PlanSelector({ selectedPlan, onSelectPlan, onCancel, onContinue }) {
         <button
           type="button"
           onClick={onContinue}
-          className="flex-[2] py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-sm font-medium transition-colors"
+          disabled={!selectedPlanId}
+          className="flex-[2] py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Continue
         </button>
