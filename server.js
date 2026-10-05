@@ -63,12 +63,3 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-
-//GITTTT YOOOOOOOOO
-//Giiiittttt woooooo
-//GITTTT YOOOOOOOOO
-//Giiiittttt woooooo
-//GITTTT YOOOOOOOOO
-//Giiiittttt woooooo
-//GITTTT YOOOOOOOOO
-//Giiiittttt woooooo
