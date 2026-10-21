@@ -63,6 +63,3 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-//Git add
-//Git add
-// Git commit -m "Initial commit"
