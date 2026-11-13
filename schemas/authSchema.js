@@ -36,7 +36,28 @@ const loginSchema = z.object({
   }),
 });
 
+const updateUserSchema = registerSchema
+  .pick({ full_name: true, email: true, role: true })
+  .partial()
+  .extend({
+    is_active: z.boolean({ error: "is_active must be true or false" }).optional(),
+  });
+
+const changePasswordSchema = z
+  .object({
+    currentPassword: z
+      .string({ error: "Current password is required" })
+      .min(1, { error: "Current password is required" }),
+    newPassword: registerSchema.shape.password,
+  })
+  .refine((data) => data.currentPassword !== data.newPassword, {
+    path: ["newPassword"],
+    error: "New password must be different from the current one",
+  });
+
 module.exports = {
   registerSchema,
   loginSchema,
+  updateUserSchema,
+  changePasswordSchema,
 };

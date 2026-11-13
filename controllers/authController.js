@@ -6,10 +6,16 @@ const {
   ConflictError,
   ForbiddenError,
   UnauthorizedError,
+  ValidationError,
 } = require("../utils/errors");
 const { logAction } = require("../utils/auditLog");
+const { escapeLike } = require("../utils/pagination");
 
 const SALT_ROUNDS = 10;
+
+// Compared against when the email is unknown so response time doesn't reveal
+// whether an account exists.
+const DUMMY_HASH = bcrypt.hashSync("timing-equalizer", SALT_ROUNDS);
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -22,23 +28,22 @@ const generateToken = (user) => {
 const register = async (req, res) => {
   const { email, password, full_name, role } = req.body;
 
-  const existingUser = await pool.query(
-    "SELECT id FROM users WHERE email = $1",
-    [email],
-  );
-
-  if (existingUser.rows.length > 0) {
-    throw new ConflictError("A user with this email already exists");
-  }
-
   const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
 
-  const result = await pool.query(
-    `INSERT INTO users (email, password_hash, full_name, role)
-     VALUES ($1, $2, $3, $4)
-     RETURNING id, email, full_name, role, is_active, created_at`,
-    [email, password_hash, full_name, role],
-  );
+  let result;
+  try {
+    result = await pool.query(
+      `INSERT INTO users (email, password_hash, full_name, role)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, email, full_name, role, is_active, created_at`,
+      [email, password_hash, full_name, role],
+    );
+  } catch (error) {
+    if (error.code === "23505") {
+      throw new ConflictError("A user with this email already exists");
+    }
+    throw error;
+  }
 
   const newUser = result.rows[0];
 
@@ -52,14 +57,11 @@ const register = async (req, res) => {
     details: { email: newUser.email, role: newUser.role },
   });
 
-  const token = generateToken(newUser);
-
   res.status(201).json({
     success: true,
     message: "User registered successfully",
     data: {
       user: newUser,
-      token,
     },
   });
 };
@@ -71,22 +73,22 @@ const login = async (req, res) => {
     email,
   ]);
 
-  if (result.rows.length === 0) {
+  const user = result.rows[0];
+
+  const isPasswordValid = await bcrypt.compare(
+    password,
+    user ? user.password_hash : DUMMY_HASH,
+  );
+
+  if (!user || !isPasswordValid) {
     throw new UnauthorizedError("Invalid email or password");
   }
 
-  const user = result.rows[0];
-
+  // Only reveal the account state once the password is proven correct
   if (!user.is_active) {
     throw new UnauthorizedError(
       "Account is deactivated. Contact an administrator",
     );
-  }
-
-  const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-
-  if (!isPasswordValid) {
-    throw new UnauthorizedError("Invalid email or password");
   }
 
   const token = generateToken(user);
@@ -108,7 +110,7 @@ const login = async (req, res) => {
 };
 
 const getUsers = async (req, res) => {
-  const search = req.query.search || "";
+  const search = typeof req.query.search === "string" ? req.query.search : "";
 
   const conditions = [];
   const params = [];
@@ -119,7 +121,7 @@ const getUsers = async (req, res) => {
       OR email ILIKE $1
       OR role ILIKE $1
     )`);
-    params.push(`%${search.trim()}%`);
+    params.push(`%${escapeLike(search.trim())}%`);
   }
 
   const whereClause =
@@ -142,8 +144,13 @@ const updateUser = async (req, res) => {
   const { id } = req.params;
   const { full_name, email, role, is_active } = req.body;
 
-  if (parseInt(id) === req.user.id && role && role !== req.user.role) {
-    throw new ForbiddenError("You cannot change your own role");
+  if (id === req.user.id) {
+    if (role && role !== req.user.role) {
+      throw new ForbiddenError("You cannot change your own role");
+    }
+    if (is_active === false) {
+      throw new ForbiddenError("You cannot deactivate your own account");
+    }
   }
 
   const result = await pool.query(
@@ -161,6 +168,18 @@ const updateUser = async (req, res) => {
     throw new NotFoundError("User");
   }
 
+  const updatedUser = result.rows[0];
+
+  await logAction({
+    userId: req.user.id,
+    userName: req.user.full_name,
+    action: "update",
+    entityType: "user",
+    entityId: updatedUser.id,
+    entityLabel: updatedUser.full_name,
+    details: { fields: Object.keys(req.body) },
+  });
+
   res.status(200).json({
     success: true,
     message: "User updated successfully",
@@ -171,7 +190,7 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   const { id } = req.params;
 
-  if (parseInt(id) === req.user.id) {
+  if (id === req.user.id) {
     throw new ForbiddenError("You cannot delete your own account");
   }
 
@@ -223,7 +242,8 @@ const changePassword = async (req, res) => {
   );
 
   if (!isCurrentValid) {
-    throw new UnauthorizedError("Current password is incorrect");
+    // 400, not 401: the dashboard logs the user out on any 401
+    throw new ValidationError("Current password is incorrect");
   }
 
   const newHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
@@ -232,6 +252,16 @@ const changePassword = async (req, res) => {
     newHash,
     userId,
   ]);
+
+  await logAction({
+    userId,
+    userName: req.user.full_name,
+    action: "update",
+    entityType: "user",
+    entityId: userId,
+    entityLabel: req.user.full_name,
+    details: { fields: ["password"] },
+  });
 
   res.status(200).json({
     success: true,

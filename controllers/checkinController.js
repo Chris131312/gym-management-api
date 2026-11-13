@@ -1,5 +1,7 @@
 const pool = require("../config/db");
 const { NotFoundError, ForbiddenError } = require("../utils/errors");
+const { todayInGym } = require("../utils/dates");
+const { parsePagination } = require("../utils/pagination");
 
 const registerCheckin = async (req, res) => {
   const { member_id } = req.body;
@@ -20,6 +22,22 @@ const registerCheckin = async (req, res) => {
     );
   }
 
+  // is_active alone isn't enough: nothing flips it off when a plan expires
+  const activeMembership = await pool.query(
+    `SELECT 1 FROM memberships
+     WHERE member_id = $1
+       AND (start_date IS NULL OR start_date <= $2::date)
+       AND end_date >= $2::date
+     LIMIT 1`,
+    [member_id, todayInGym()],
+  );
+
+  if (activeMembership.rows.length === 0) {
+    throw new ForbiddenError(
+      "Access Denied. Membership expired or not found. Please visit the front desk.",
+    );
+  }
+
   const newCheckIn = await pool.query(
     "INSERT INTO check_ins (member_id) VALUES ($1) RETURNING *",
     [member_id],
@@ -33,18 +51,23 @@ const registerCheckin = async (req, res) => {
 };
 
 const getRecentCheckins = async (req, res) => {
-  const query = `
-    SELECT
-      check_ins.id AS checkin_id,
-      check_ins.check_in_time,
-      members.first_name,
-      members.last_name
-    FROM check_ins
-    INNER JOIN members ON check_ins.member_id = members.id
-    ORDER BY check_ins.check_in_time DESC
-  `;
+  const { limit } = parsePagination(req.query, {
+    defaultLimit: 50,
+    maxLimit: 200,
+  });
 
-  const recentCheckIns = await pool.query(query);
+  const recentCheckIns = await pool.query(
+    `SELECT
+       check_ins.id AS checkin_id,
+       check_ins.check_in_time,
+       members.first_name,
+       members.last_name
+     FROM check_ins
+     INNER JOIN members ON check_ins.member_id = members.id
+     ORDER BY check_ins.check_in_time DESC
+     LIMIT $1`,
+    [limit],
+  );
 
   res.status(200).json({
     success: true,

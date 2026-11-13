@@ -3,63 +3,32 @@ require("dotenv").config();
 const validateEnv = require("./config/validateEnv");
 validateEnv();
 
-const express = require("express");
-const cors = require("cors");
 const pool = require("./config/db");
+const app = require("./app");
 
-const errorHandler = require("./middleware/errorHandler");
-const asyncHandler = require("./middleware/asyncHandler");
-const { NotFoundError } = require("./utils/errors");
-
-const authRoutes = require("./routes/authRoutes");
-const memberRoutes = require("./routes/memberRoutes");
-const membershipRoutes = require("./routes/membershipRoutes");
-const checkinRoutes = require("./routes/checkinRoutes");
-const dashboardRoutes = require("./routes/dashboardRoutes");
-const auditRoutes = require("./routes/auditRoutes");
-const settingsRoutes = require("./routes/settingsRoutes");
-
-const app = express();
 const PORT = process.env.PORT || 3000;
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  process.env.FRONTEND_URL,
-].filter(Boolean);
-
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }),
-);
-app.use(express.json());
-
-// Health Check
-app.get("/api/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Gym Management API is running smoothly.",
-  });
+pool.query("SELECT NOW()", (err) => {
+  if (err) {
+    console.error("Error connecting to the database:", err.message);
+    process.exit(1);
+  }
+  console.log("Successfully connected to the PostgreSQL database.");
 });
 
-// Mount routes
-app.use("/api/auth", authRoutes);
-app.use("/api/members", memberRoutes);
-app.use("/api/memberships", membershipRoutes);
-app.use("/api/checkins", checkinRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/audit-logs", auditRoutes);
-app.use("/api/settings", settingsRoutes);
-
-// 404 HANDLER
-app.use((req, res, next) => {
-  next(new NotFoundError(`Route ${req.method} ${req.path}`));
-});
-
-// ERROR HANDLER
-app.use(errorHandler);
-
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+const shutdown = (signal) => {
+  console.log(`${signal} received, shutting down gracefully...`);
+  server.close(async () => {
+    await pool.end();
+    process.exit(0);
+  });
+  // Don't hang forever on stuck connections
+  setTimeout(() => process.exit(1), 10_000).unref();
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

@@ -1,10 +1,13 @@
 const pool = require("../config/db");
+const { parsePagination } = require("../utils/pagination");
 
 const getAuditLogs = async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 20;
-  const offset = (page - 1) * limit;
-  const entityType = req.query.entityType || "all";
+  const { page, limit, offset } = parsePagination(req.query, {
+    defaultLimit: 20,
+    maxLimit: 100,
+  });
+  const entityType =
+    typeof req.query.entityType === "string" ? req.query.entityType : "all";
 
   const conditions = [];
   const params = [];

@@ -1,4 +1,3 @@
-const { success } = require("zod");
 const AppError = require("../utils/AppError");
 
 function errorHandler(err, req, res, next) {
@@ -24,6 +23,15 @@ function errorHandler(err, req, res, next) {
       success: false,
       status: "fail",
       message: "Resource already exists",
+    });
+  }
+
+  // 22P02: malformed value (e.g. non-UUID id), 22007/22008: bad date
+  if (["22P02", "22007", "22008"].includes(err.code)) {
+    return res.status(400).json({
+      success: false,
+      status: "fail",
+      message: "Invalid input value",
     });
   }
 

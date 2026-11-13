@@ -1,6 +1,8 @@
 const pool = require("../config/db");
 const { NotFoundError } = require("../utils/errors");
 const { logAction } = require("../utils/auditLog");
+const { withTransaction } = require("../utils/transaction");
+const { todayInGym } = require("../utils/dates");
 
 const getMembershipsByMember = async (req, res) => {
   const { member_id } = req.params;
@@ -16,20 +18,38 @@ const getMembershipsByMember = async (req, res) => {
 const createMembership = async (req, res) => {
   const { member_id, plan_name, price, start_date, end_date } = req.body;
 
-  const result = await pool.query(
-    `INSERT INTO memberships (member_id, plan_name, price, start_date, end_date)
-     VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-    [member_id, plan_name, price, start_date, end_date],
-  );
+  // Insert + reactivate must succeed or fail together
+  const membership = await withTransaction(async (client) => {
+    const result = await client.query(
+      `INSERT INTO memberships (member_id, plan_name, price, start_date, end_date)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [member_id, plan_name, price, start_date, end_date],
+    );
 
-  await pool.query("UPDATE members SET is_active = true WHERE id = $1", [
-    member_id,
-  ]);
+    // Only reactivate if the plan is still valid (not backdated/expired)
+    if (end_date >= todayInGym()) {
+      await client.query("UPDATE members SET is_active = true WHERE id = $1", [
+        member_id,
+      ]);
+    }
+
+    return result.rows[0];
+  });
+
+  await logAction({
+    userId: req.user.id,
+    userName: req.user.full_name,
+    action: "create",
+    entityType: "membership",
+    entityId: membership.id,
+    entityLabel: plan_name,
+    details: { price, member_id, start_date, end_date },
+  });
 
   res.status(201).json({
     success: true,
     message: "Membership added successfully",
-    data: result.rows[0],
+    data: membership,
   });
 };
 
@@ -47,10 +67,22 @@ const updateMembership = async (req, res) => {
     throw new NotFoundError("Membership");
   }
 
+  const membership = result.rows[0];
+
+  await logAction({
+    userId: req.user.id,
+    userName: req.user.full_name,
+    action: "update",
+    entityType: "membership",
+    entityId: membership.id,
+    entityLabel: membership.plan_name,
+    details: { price, member_id: membership.member_id, start_date, end_date },
+  });
+
   res.status(200).json({
     success: true,
     message: "Membership updated successfully",
-    data: result.rows[0],
+    data: membership,
   });
 };
 

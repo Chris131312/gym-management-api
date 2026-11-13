@@ -7,6 +7,10 @@ const { logAction } = require("../utils/auditLog");
 const getGymSettings = async (req, res) => {
   const result = await pool.query("SELECT * FROM gym_settings WHERE id = 1");
 
+  if (result.rows.length === 0) {
+    throw new NotFoundError("Gym settings");
+  }
+
   res.status(200).json({
     success: true,
     data: result.rows[0],
@@ -27,6 +31,10 @@ const updateGymSettings = async (req, res) => {
      RETURNING *`,
     [gym_name, address, phone, email],
   );
+
+  if (result.rows.length === 0) {
+    throw new NotFoundError("Gym settings");
+  }
 
   await logAction({
     userId: req.user.id,
@@ -70,12 +78,13 @@ const getAllPlans = async (req, res) => {
 };
 
 const createPlan = async (req, res) => {
-  const { name, price, duration_months, description, sort_order } = req.body;
+  const { name, price, duration_months, description, sort_order, is_active } =
+    req.body;
 
   const result = await pool.query(
-    `INSERT INTO membership_plans (name, price, duration_months, description, sort_order)
-     VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-    [name, price, duration_months, description, sort_order || 0],
+    `INSERT INTO membership_plans (name, price, duration_months, description, sort_order, is_active)
+     VALUES ($1, $2, $3, $4, $5, COALESCE($6, true)) RETURNING *`,
+    [name, price, duration_months, description, sort_order || 0, is_active],
   );
 
   const plan = result.rows[0];

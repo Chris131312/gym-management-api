@@ -4,7 +4,14 @@ const validate = require("../middleware/validate");
 const asyncHandler = require("../middleware/asyncHandler");
 const protect = require("../middleware/protect");
 const restrictTo = require("../middleware/restrictTo");
-const { registerSchema, loginSchema } = require("../schemas/authSchema");
+const {
+  registerSchema,
+  loginSchema,
+  updateUserSchema,
+  changePasswordSchema,
+} = require("../schemas/authSchema");
+const { intIdParam } = require("../schemas/commonSchema");
+const { loginLimiter } = require("../middleware/rateLimiters");
 const {
   register,
   login,
@@ -24,7 +31,12 @@ router.post(
 );
 
 // POST /api/auth/login (public)
-router.post("/login", validate(loginSchema), asyncHandler(login));
+router.post(
+  "/login",
+  loginLimiter,
+  validate(loginSchema),
+  asyncHandler(login),
+);
 
 // GET /api/auth/users (admin only)
 router.get(
@@ -39,6 +51,8 @@ router.put(
   "/users/:id",
   asyncHandler(protect),
   restrictTo("admin"),
+  validate(intIdParam, "params"),
+  validate(updateUserSchema),
   asyncHandler(updateUser),
 );
 
@@ -47,12 +61,14 @@ router.delete(
   "/users/:id",
   asyncHandler(protect),
   restrictTo("admin"),
+  validate(intIdParam, "params"),
   asyncHandler(deleteUser),
 );
 // PUT /api/auth/change-password (authenticated users)
 router.put(
   "/change-password",
   asyncHandler(protect),
+  validate(changePasswordSchema),
   asyncHandler(changePassword),
 );
 module.exports = router;

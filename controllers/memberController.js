@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const { logAction } = require("../utils/auditLog");
 const { NotFoundError } = require("../utils/errors");
+const { parsePagination, escapeLike } = require("../utils/pagination");
 
 const createMember = async (req, res) => {
   const { first_name, last_name, email, phone_number, is_active } = req.body;
@@ -10,6 +11,16 @@ const createMember = async (req, res) => {
     [first_name, last_name, email, phone_number, is_active],
   );
 
+  await logAction({
+    userId: req.user.id,
+    userName: req.user.full_name,
+    action: "create",
+    entityType: "member",
+    entityId: newMember.rows[0].id,
+    entityLabel: `${first_name} ${last_name}`,
+    details: { email },
+  });
+
   res.status(201).json({
     success: true,
     message: "Member registered successfully!",
@@ -18,10 +29,11 @@ const createMember = async (req, res) => {
 };
 
 const getMembers = async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const offset = (page - 1) * limit;
-  const search = req.query.search || "";
+  const { page, limit, offset } = parsePagination(req.query, {
+    defaultLimit: 10,
+    maxLimit: 100,
+  });
+  const search = typeof req.query.search === "string" ? req.query.search : "";
   const status = req.query.status || "all";
 
   const conditions = [];
@@ -36,7 +48,7 @@ const getMembers = async (req, res) => {
       OR email ILIKE $${paramCount}
       OR CONCAT(first_name, ' ', last_name) ILIKE $${paramCount}
     )`);
-    params.push(`%${search.trim()}%`);
+    params.push(`%${escapeLike(search.trim())}%`);
   }
 
   if (status === "active") {
@@ -87,8 +99,17 @@ const updateMember = async (req, res) => {
   const { id } = req.params;
   const { first_name, last_name, email, phone_number, is_active } = req.body;
 
+  // COALESCE: the schema is partial, so omitted fields must keep their value
   const updatedMember = await pool.query(
-    "UPDATE members SET first_name = $1, last_name = $2, email = $3, phone_number = $4, is_active = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING *",
+    `UPDATE members
+     SET first_name = COALESCE($1, first_name),
+         last_name = COALESCE($2, last_name),
+         email = COALESCE($3, email),
+         phone_number = COALESCE($4, phone_number),
+         is_active = COALESCE($5, is_active),
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = $6
+     RETURNING *`,
     [first_name, last_name, email, phone_number, is_active, id],
   );
 
@@ -96,10 +117,22 @@ const updateMember = async (req, res) => {
     throw new NotFoundError("Member");
   }
 
+  const member = updatedMember.rows[0];
+
+  await logAction({
+    userId: req.user.id,
+    userName: req.user.full_name,
+    action: "update",
+    entityType: "member",
+    entityId: member.id,
+    entityLabel: `${member.first_name} ${member.last_name}`,
+    details: { fields: Object.keys(req.body) },
+  });
+
   res.status(200).json({
     success: true,
     message: "Member updated successfully!",
-    data: updatedMember.rows[0],
+    data: member,
   });
 };
 

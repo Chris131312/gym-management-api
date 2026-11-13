@@ -1,6 +1,8 @@
-function validate(schema) {
+// Validates req[source] against a Zod schema. `source` is "body" (default) or "params".
+// (req.query is read-only in Express 5; use utils/pagination for query strings.)
+function validate(schema, source = "body") {
   return (req, res, next) => {
-    const result = schema.safeParse(req.body);
+    const result = schema.safeParse(req[source]);
 
     if (!result.success) {
       const errors = result.error.issues.map((err) => ({
@@ -10,12 +12,13 @@ function validate(schema) {
 
       return res.status(400).json({
         success: false,
-        error: "Validation failed",
+        error: errors[0]?.message || "Validation failed",
+        message: "Validation failed",
         details: errors,
       });
     }
 
-    req.body = result.data;
+    req[source] = result.data;
     next();
   };
 }

@@ -1,27 +1,15 @@
 const { Pool } = require("pg");
 require("dotenv").config();
 
-if (!process.env.DATABASE_URL) {
-  console.error("Missing DATABASE_URL in ,env");
-  console.error("Check ypur .env file againts .env.example");
-  process.exit(1);
-}
-
+// DATABASE_URL presence is enforced by config/validateEnv.js at startup
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-pool.query("SELECT NOW()", (err, res) => {
-  if (err) {
-    console.error("Error connecting to the database:", err.message);
-    process.exit(1);
-  }
-  console.log("Successfully connected to the PostgreSQL database.");
-});
-
+// pg discards the broken idle client and the pool keeps working, so just log:
+// a transient network blip shouldn't take the whole API down.
 pool.on("error", (err) => {
-  console.error("Unexpected database error:", err);
-  process.exit(-1);
+  console.error("Unexpected database error on idle client:", err.message);
 });
 
 module.exports = pool;
