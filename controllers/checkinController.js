@@ -6,9 +6,10 @@ const { parsePagination } = require("../utils/pagination");
 const registerCheckin = async (req, res) => {
   const { member_id } = req.body;
 
-  const memberQuery = await pool.query("SELECT * FROM members WHERE id = $1", [
-    member_id,
-  ]);
+  const memberQuery = await pool.query(
+    "SELECT * FROM members WHERE id = $1 AND deleted_at IS NULL",
+    [member_id],
+  );
 
   if (memberQuery.rows.length === 0) {
     throw new NotFoundError("Member");
@@ -64,6 +65,7 @@ const getRecentCheckins = async (req, res) => {
        members.last_name
      FROM check_ins
      INNER JOIN members ON check_ins.member_id = members.id
+     WHERE members.deleted_at IS NULL
      ORDER BY check_ins.check_in_time DESC
      LIMIT $1`,
     [limit],

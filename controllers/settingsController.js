@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const { NotFoundError } = require("../utils/errors");
 const { logAction } = require("../utils/auditLog");
+const { withTransaction } = require("../utils/transaction");
 
 // ─── Gym Info ────────────────────────────────────────────
 
@@ -150,25 +151,32 @@ const updatePlan = async (req, res) => {
 const deletePlan = async (req, res) => {
   const { id } = req.params;
 
-  const result = await pool.query(
-    "DELETE FROM membership_plans WHERE id = $1 RETURNING *",
-    [id],
-  );
+  const plan = await withTransaction(async (client) => {
+    const result = await client.query(
+      "DELETE FROM membership_plans WHERE id = $1 RETURNING *",
+      [id],
+    );
 
-  if (result.rows.length === 0) {
-    throw new NotFoundError("Plan");
-  }
+    if (result.rows.length === 0) {
+      throw new NotFoundError("Plan");
+    }
 
-  const plan = result.rows[0];
+    const deleted = result.rows[0];
 
-  await logAction({
-    userId: req.user.id,
-    userName: req.user.full_name,
-    action: "delete",
-    entityType: "plan",
-    entityId: plan.id,
-    entityLabel: plan.name,
-    details: { price: plan.price },
+    await logAction(
+      {
+        userId: req.user.id,
+        userName: req.user.full_name,
+        action: "delete",
+        entityType: "plan",
+        entityId: deleted.id,
+        entityLabel: deleted.name,
+        details: { price: deleted.price },
+      },
+      client,
+    );
+
+    return deleted;
   });
 
   res.status(200).json({

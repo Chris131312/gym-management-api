@@ -33,6 +33,7 @@ router.post(
 router.put(
   "/:id",
   asyncHandler(protect),
+  restrictTo("admin"),
   validate(uuidIdParam, "params"),
   validate(updateMembershipSchema),
   asyncHandler(updateMembership),

@@ -20,6 +20,14 @@ const createMembership = async (req, res) => {
 
   // Insert + reactivate must succeed or fail together
   const membership = await withTransaction(async (client) => {
+    const member = await client.query(
+      "SELECT 1 FROM members WHERE id = $1 AND deleted_at IS NULL FOR UPDATE",
+      [member_id],
+    );
+    if (member.rows.length === 0) {
+      throw new NotFoundError("Member");
+    }
+
     const result = await client.query(
       `INSERT INTO memberships (member_id, plan_name, price, start_date, end_date)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
@@ -89,25 +97,32 @@ const updateMembership = async (req, res) => {
 const deleteMembership = async (req, res) => {
   const { id } = req.params;
 
-  const result = await pool.query(
-    "DELETE FROM memberships WHERE id = $1 RETURNING *",
-    [id],
-  );
+  const membership = await withTransaction(async (client) => {
+    const result = await client.query(
+      "DELETE FROM memberships WHERE id = $1 RETURNING *",
+      [id],
+    );
 
-  if (result.rows.length === 0) {
-    throw new NotFoundError("Membership");
-  }
+    if (result.rows.length === 0) {
+      throw new NotFoundError("Membership");
+    }
 
-  const membership = result.rows[0];
+    const deleted = result.rows[0];
 
-  await logAction({
-    userId: req.user.id,
-    userName: req.user.full_name,
-    action: "delete",
-    entityType: "membership",
-    entityId: membership.id,
-    entityLabel: membership.plan_name,
-    details: { price: membership.price, member_id: membership.member_id },
+    await logAction(
+      {
+        userId: req.user.id,
+        userName: req.user.full_name,
+        action: "delete",
+        entityType: "membership",
+        entityId: deleted.id,
+        entityLabel: deleted.plan_name,
+        details: { price: deleted.price, member_id: deleted.member_id },
+      },
+      client,
+    );
+
+    return deleted;
   });
 
   res.status(200).json({

@@ -6,8 +6,10 @@ const getStats = async (req, res) => {
 
   const [totalMembersRes, activeMembersRes, revenueRes, checkinsTodayRes] =
     await Promise.all([
-      pool.query("SELECT COUNT(*) FROM members"),
-      pool.query("SELECT COUNT(*) FROM members WHERE is_active = true"),
+      pool.query("SELECT COUNT(*) FROM members WHERE deleted_at IS NULL"),
+      pool.query(
+        "SELECT COUNT(*) FROM members WHERE is_active = true AND deleted_at IS NULL",
+      ),
       pool.query("SELECT SUM(price) FROM memberships"),
       // Range comparison (index-friendly) over the gym's local day
       pool.query(
@@ -99,7 +101,8 @@ const getAlerts = async (req, res) => {
        (ms.end_date - $1::date) AS days_remaining
      FROM members m
      INNER JOIN memberships ms ON m.id = ms.member_id
-     WHERE ms.id = (
+     WHERE m.deleted_at IS NULL
+     AND ms.id = (
        SELECT id FROM memberships
        WHERE member_id = m.id
        ORDER BY end_date DESC

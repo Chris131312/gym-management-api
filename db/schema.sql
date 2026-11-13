@@ -16,13 +16,15 @@ CREATE TABLE members (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   first_name          VARCHAR NOT NULL,
   last_name           VARCHAR NOT NULL,
-  email               VARCHAR NOT NULL UNIQUE,
+  email               VARCHAR NOT NULL, -- unique among non-deleted members (migration 003)
   phone_number        VARCHAR,
   profile_picture_url TEXT,
   is_active           BOOLEAN DEFAULT false,
   created_at          TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  updated_at          TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+  updated_at          TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  deleted_at          TIMESTAMPTZ -- soft delete (migration 003)
 );
+CREATE UNIQUE INDEX members_email_active_key ON members (email) WHERE deleted_at IS NULL;
 
 CREATE TABLE memberships (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),

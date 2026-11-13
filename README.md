@@ -9,9 +9,8 @@ The React dashboard lives in `gym-dashboard/`.
 ```bash
 npm install
 cp .env.example .env        # then fill it in
-psql "$DATABASE_URL" -f db/schema.sql
-psql "$DATABASE_URL" -f db/migrations/001_add_indexes.sql
-psql "$DATABASE_URL" -f db/migrations/002_audit_entity_id_text.sql
+psql "$DATABASE_URL" -f db/schema.sql   # fresh database only
+npm run migrate                          # applies pending db/migrations/*.sql
 npm run dev
 ```
 
@@ -27,14 +26,19 @@ npm run dev
 ## Scripts
 
 - `npm run dev` / `npm start`: run the API
+- `npm run migrate`: apply pending SQL migrations (tracked in `schema_migrations`)
 - `npm test`: unit + HTTP tests (no database required)
 
 ## Business rules worth knowing
 
 - A check-in needs an **active member _and_ a membership covering today**
   (`start_date <= today <= end_date`, in `GYM_TIMEZONE`).
-- Only admins can delete members, memberships and plans, and manage staff.
-  Deleting a member cascades to their memberships and check-ins.
+- Only admins can edit/delete memberships, delete members and plans, and manage staff.
+- Deleting a member is a **soft delete** (`deleted_at`): their memberships and
+  check-ins are kept, so payment history and revenue stay intact. Their email
+  can be registered again.
+- Deletes and their audit-log entry share one transaction: if the audit insert
+  fails, the delete is rolled back.
 - Failed logins are rate limited (10 per 15 min per IP).
 
 ## Endpoints

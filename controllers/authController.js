@@ -10,6 +10,7 @@ const {
 } = require("../utils/errors");
 const { logAction } = require("../utils/auditLog");
 const { escapeLike } = require("../utils/pagination");
+const { withTransaction } = require("../utils/transaction");
 
 const SALT_ROUNDS = 10;
 
@@ -194,25 +195,32 @@ const deleteUser = async (req, res) => {
     throw new ForbiddenError("You cannot delete your own account");
   }
 
-  const result = await pool.query(
-    "DELETE FROM users WHERE id = $1 RETURNING id, email, full_name",
-    [id],
-  );
+  const deletedUser = await withTransaction(async (client) => {
+    const result = await client.query(
+      "DELETE FROM users WHERE id = $1 RETURNING id, email, full_name",
+      [id],
+    );
 
-  if (result.rows.length === 0) {
-    throw new NotFoundError("User");
-  }
+    if (result.rows.length === 0) {
+      throw new NotFoundError("User");
+    }
 
-  const deletedUser = result.rows[0];
+    const deleted = result.rows[0];
 
-  await logAction({
-    userId: req.user.id,
-    userName: req.user.full_name,
-    action: "delete",
-    entityType: "user",
-    entityId: deletedUser.id,
-    entityLabel: deletedUser.full_name,
-    details: { email: deletedUser.email },
+    await logAction(
+      {
+        userId: req.user.id,
+        userName: req.user.full_name,
+        action: "delete",
+        entityType: "user",
+        entityId: deleted.id,
+        entityLabel: deleted.full_name,
+        details: { email: deleted.email },
+      },
+      client,
+    );
+
+    return deleted;
   });
 
   res.status(200).json({

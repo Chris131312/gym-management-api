@@ -590,17 +590,21 @@ function PaymentHistory({
                     )}
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="font-bold text-emerald-600 text-sm group-hover:hidden">
+                    <span
+                      className={`font-bold text-emerald-600 text-sm ${userRole === "admin" ? "group-hover:hidden" : ""}`}
+                    >
                       {formatCurrency(plan.price)}
                     </span>
                     <div className="hidden group-hover:flex items-center gap-1">
-                      <button
-                        onClick={() => onEdit(plan)}
-                        className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                        title="Edit Membership"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                      </button>
+                      {userRole === "admin" && (
+                        <button
+                          onClick={() => onEdit(plan)}
+                          className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Edit Membership"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                       {userRole === "admin" && (
                         <button
                           onClick={() => onDelete(plan)}

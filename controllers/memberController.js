@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const { logAction } = require("../utils/auditLog");
 const { NotFoundError } = require("../utils/errors");
+const { withTransaction } = require("../utils/transaction");
 const { parsePagination, escapeLike } = require("../utils/pagination");
 
 const createMember = async (req, res) => {
@@ -36,10 +37,9 @@ const getMembers = async (req, res) => {
   const search = typeof req.query.search === "string" ? req.query.search : "";
   const status = req.query.status || "all";
 
-  const conditions = [];
+  const conditions = ["deleted_at IS NULL"];
   const params = [];
   let paramCount = 0;
-
   if (search.trim()) {
     paramCount++;
     conditions.push(`(
@@ -83,7 +83,9 @@ const getMembers = async (req, res) => {
 
 const getMemberById = async (req, res) => {
   const { id } = req.params;
-  const result = await pool.query("SELECT * FROM members WHERE id = $1", [id]);
+  const result = await pool.query("SELECT * FROM members WHERE id = $1 AND deleted_at IS NULL",
+    [id],
+  );
 
   if (result.rows.length === 0) {
     throw new NotFoundError("Member");
@@ -108,7 +110,7 @@ const updateMember = async (req, res) => {
          phone_number = COALESCE($4, phone_number),
          is_active = COALESCE($5, is_active),
          updated_at = CURRENT_TIMESTAMP
-     WHERE id = $6
+     WHERE id = $6 AND deleted_at IS NULL
      RETURNING *`,
     [first_name, last_name, email, phone_number, is_active, id],
   );
@@ -136,28 +138,39 @@ const updateMember = async (req, res) => {
   });
 };
 
+// Soft delete: keeps memberships, payments and check-ins for the books
 const deleteMember = async (req, res) => {
   const { id } = req.params;
 
-  const deletedMember = await pool.query(
-    "DELETE FROM members WHERE id = $1 RETURNING *",
-    [id],
-  );
+  const member = await withTransaction(async (client) => {
+    const result = await client.query(
+      `UPDATE members
+       SET deleted_at = CURRENT_TIMESTAMP, is_active = false, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1 AND deleted_at IS NULL
+       RETURNING *`,
+      [id],
+    );
 
-  if (deletedMember.rows.length === 0) {
-    throw new NotFoundError("Member");
-  }
+    if (result.rows.length === 0) {
+      throw new NotFoundError("Member");
+    }
 
-  const member = deletedMember.rows[0];
+    const deleted = result.rows[0];
 
-  await logAction({
-    userId: req.user.id,
-    userName: req.user.full_name,
-    action: "delete",
-    entityType: "member",
-    entityId: member.id,
-    entityLabel: `${member.first_name} ${member.last_name}`,
-    details: { email: member.email, phone: member.phone_number },
+    await logAction(
+      {
+        userId: req.user.id,
+        userName: req.user.full_name,
+        action: "delete",
+        entityType: "member",
+        entityId: deleted.id,
+        entityLabel: `${deleted.first_name} ${deleted.last_name}`,
+        details: { email: deleted.email, phone: deleted.phone_number },
+      },
+      client,
+    );
+
+    return deleted;
   });
 
   res.status(200).json({
