@@ -24,7 +24,8 @@ async function request(endpoint, options = {}) {
     data = JSON.parse(text);
   }
 
-  if (response.status === 401) {
+  // A 401 on the login form means "wrong credentials", not "session expired"
+  if (response.status === 401 && endpoint !== "/auth/login") {
     clearAuth();
     window.location.href = "/";
     throw new Error("Session expired. Please log in again");
