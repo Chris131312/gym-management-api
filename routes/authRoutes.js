@@ -11,7 +11,10 @@ const {
   changePasswordSchema,
 } = require("../schemas/authSchema");
 const { intIdParam } = require("../schemas/commonSchema");
-const { loginLimiter } = require("../middleware/rateLimiters");
+const {
+  loginLimiter,
+  changePasswordLimiter,
+} = require("../middleware/rateLimiters");
 const {
   register,
   login,
@@ -68,6 +71,7 @@ router.delete(
 router.put(
   "/change-password",
   asyncHandler(protect),
+  changePasswordLimiter,
   validate(changePasswordSchema),
   asyncHandler(changePassword),
 );

@@ -47,6 +47,35 @@ test("login validates its body before touching the DB", async () => {
   assert.ok(body.details.length >= 1);
 });
 
+test("malformed JSON is a 400, not a 500", async () => {
+  const res = await fetch(`${base}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{bad",
+  });
+  assert.equal(res.status, 400);
+  assert.equal((await res.json()).message, "Request body is not valid JSON");
+});
+
+test("oversized bodies are a 413, not a 500", async () => {
+  const res = await fetch(`${base}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "a@b.co", password: "x".repeat(200_000) }),
+  });
+  assert.equal(res.status, 413);
+});
+
+test("tokens signed with a different JWT algorithm are rejected", async () => {
+  const jwt = require("jsonwebtoken");
+  const token = jwt.sign({ id: 1 }, process.env.JWT_SECRET, { algorithm: "HS512" });
+  const res = await fetch(`${base}/api/members`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  assert.equal(res.status, 401);
+  assert.match((await res.json()).message, /Invalid token/);
+});
+
 // Keep last: exhausts the shared per-IP budget
 test("login is rate limited after repeated failures", async () => {
   let last;

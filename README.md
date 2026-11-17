@@ -17,7 +17,7 @@ npm run dev
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection string (required) |
-| `JWT_SECRET` | Signing key, 32+ chars (required) |
+| `JWT_SECRET` | Signing key, 32+ chars (required; startup fails in production if shorter) |
 | `JWT_EXPIRES_IN` | Token lifetime, default `7d` |
 | `FRONTEND_URL` | Allowed CORS origin(s), comma-separated |
 | `GYM_TIMEZONE` | IANA timezone that defines "today" (default `UTC`) |

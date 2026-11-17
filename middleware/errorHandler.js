@@ -18,6 +18,23 @@ function errorHandler(err, req, res, next) {
     });
   }
 
+  // Errors raised by express.json() before any route runs
+  if (err.type === "entity.parse.failed") {
+    return res.status(400).json({
+      success: false,
+      status: "fail",
+      message: "Request body is not valid JSON",
+    });
+  }
+
+  if (err.type === "entity.too.large") {
+    return res.status(413).json({
+      success: false,
+      status: "fail",
+      message: "Request body is too large",
+    });
+  }
+
   if (err.code === "23505") {
     return res.status(409).json({
       success: false,

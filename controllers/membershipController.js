@@ -3,6 +3,7 @@ const { NotFoundError } = require("../utils/errors");
 const { logAction } = require("../utils/auditLog");
 const { withTransaction } = require("../utils/transaction");
 const { todayInGym } = require("../utils/dates");
+const { syncMemberActive } = require("../utils/memberships");
 
 const getMembershipsByMember = async (req, res) => {
   const { member_id } = req.params;
@@ -65,26 +66,36 @@ const updateMembership = async (req, res) => {
   const { id } = req.params;
   const { plan_name, price, start_date, end_date } = req.body;
 
-  const result = await pool.query(
-    `UPDATE memberships SET plan_name = $1, price = $2, start_date = $3, end_date = $4
-     WHERE id = $5 RETURNING *`,
-    [plan_name, price, start_date, end_date, id],
-  );
+  // Update, is_active re-sync and audit succeed or fail together
+  const membership = await withTransaction(async (client) => {
+    const result = await client.query(
+      `UPDATE memberships SET plan_name = $1, price = $2, start_date = $3, end_date = $4
+       WHERE id = $5 RETURNING *`,
+      [plan_name, price, start_date, end_date, id],
+    );
 
-  if (result.rows.length === 0) {
-    throw new NotFoundError("Membership");
-  }
+    if (result.rows.length === 0) {
+      throw new NotFoundError("Membership");
+    }
 
-  const membership = result.rows[0];
+    const updated = result.rows[0];
 
-  await logAction({
-    userId: req.user.id,
-    userName: req.user.full_name,
-    action: "update",
-    entityType: "membership",
-    entityId: membership.id,
-    entityLabel: membership.plan_name,
-    details: { price, member_id: membership.member_id, start_date, end_date },
+    await syncMemberActive(client, updated.member_id, todayInGym());
+
+    await logAction(
+      {
+        userId: req.user.id,
+        userName: req.user.full_name,
+        action: "update",
+        entityType: "membership",
+        entityId: updated.id,
+        entityLabel: updated.plan_name,
+        details: { price, member_id: updated.member_id, start_date, end_date },
+      },
+      client,
+    );
+
+    return updated;
   });
 
   res.status(200).json({
@@ -108,6 +119,8 @@ const deleteMembership = async (req, res) => {
     }
 
     const deleted = result.rows[0];
+
+    await syncMemberActive(client, deleted.member_id, todayInGym());
 
     await logAction(
       {

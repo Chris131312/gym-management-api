@@ -19,7 +19,7 @@ const dbPath = require.resolve("../config/db");
 require.cache[dbPath] = { id: dbPath, filename: dbPath, loaded: true, exports: fakePool };
 
 const { deleteMember } = require("../controllers/memberController");
-const { deleteMembership } = require("../controllers/membershipController");
+const { deleteMembership, updateMembership } = require("../controllers/membershipController");
 const { NotFoundError } = require("../utils/errors");
 
 const res = () => ({
@@ -58,8 +58,47 @@ test("a failing audit insert rolls the delete back", async () => {
   script = [
     { rows: [] },
     { rows: [{ id: "1", plan_name: "P", price: 1, member_id: UUID }] },
+    { rows: [] }, // is_active re-sync
     new Error("audit insert failed"),
   ];
   await assert.rejects(deleteMembership(req(UUID), res()), /audit insert failed/);
-  assert.deepEqual(verbs(), ["BEGIN", "DELETE", "INSERT", "ROLLBACK", "RELEASE"]);
+  assert.deepEqual(verbs(), ["BEGIN", "DELETE", "UPDATE", "INSERT", "ROLLBACK", "RELEASE"]);
+});
+
+test("deleteMembership re-syncs the member's is_active in the same transaction", async () => {
+  script = [
+    { rows: [] },
+    { rows: [{ id: "1", plan_name: "P", price: 1, member_id: UUID }] },
+    { rows: [] },
+    { rows: [] },
+  ];
+  await deleteMembership(req("1"), res());
+  assert.deepEqual(verbs(), ["BEGIN", "DELETE", "UPDATE", "INSERT", "COMMIT", "RELEASE"]);
+  assert.match(log[2].full, /UPDATE members\s+SET is_active = EXISTS/);
+  assert.equal(log[2].params[0], UUID);
+});
+
+test("updateMembership re-syncs is_active and audits atomically", async () => {
+  script = [
+    { rows: [] },
+    { rows: [{ id: "1", plan_name: "P", price: 1, member_id: UUID }] },
+    { rows: [] },
+    { rows: [] },
+  ];
+  const r = res();
+  await updateMembership(
+    { ...req("1"), body: { plan_name: "P", price: 1, start_date: "2026-01-01", end_date: "2027-01-01" } },
+    r,
+  );
+  assert.equal(r.statusCode, 200);
+  assert.deepEqual(verbs(), ["BEGIN", "UPDATE", "UPDATE", "INSERT", "COMMIT", "RELEASE"]);
+});
+
+test("updateMembership on a missing membership rolls back with 404", async () => {
+  script = [{ rows: [] }, { rows: [] }];
+  await assert.rejects(
+    updateMembership({ ...req("1"), body: { plan_name: "P", price: 1, start_date: "2026-01-01", end_date: "2027-01-01" } }, res()),
+    NotFoundError,
+  );
+  assert.deepEqual(verbs(), ["BEGIN", "UPDATE", "ROLLBACK", "RELEASE"]);
 });

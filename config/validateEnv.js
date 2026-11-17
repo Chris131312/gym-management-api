@@ -12,6 +12,17 @@ function validateEnv() {
     process.exit(1);
   }
 
+  if (
+    process.env.JWT_SECRET.length < 32 &&
+    process.env.NODE_ENV === "production"
+  ) {
+    console.error(
+      "\n FATAL: JWT_SECRET must be at least 32 characters in production. Generate one with:\n" +
+        "   node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\"\n",
+    );
+    process.exit(1);
+  }
+
   if (process.env.JWT_SECRET.length < 32) {
     console.warn(
       "\n WARNING: JWT_SECRET is shorter than 32 characters. Generate a strong one with:\n" +

@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const { GYM_TIMEZONE, todayInGym } = require("../utils/dates");
+const { hasValidMembership } = require("../utils/memberships");
 
 const getStats = async (req, res) => {
   const today = todayInGym();
@@ -7,8 +8,12 @@ const getStats = async (req, res) => {
   const [totalMembersRes, activeMembersRes, revenueRes, checkinsTodayRes] =
     await Promise.all([
       pool.query("SELECT COUNT(*) FROM members WHERE deleted_at IS NULL"),
+      // "Active" = can check in today: flagged active AND holding a valid plan
       pool.query(
-        "SELECT COUNT(*) FROM members WHERE is_active = true AND deleted_at IS NULL",
+        `SELECT COUNT(*) FROM members
+         WHERE is_active = true AND deleted_at IS NULL
+           AND ${hasValidMembership("members.id", "$1")}`,
+        [today],
       ),
       pool.query("SELECT SUM(price) FROM memberships"),
       // Range comparison (index-friendly) over the gym's local day
