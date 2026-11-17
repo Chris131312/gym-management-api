@@ -11,8 +11,13 @@ export const getToken = () => {
 };
 
 export const getUser = () => {
-  const user = localStorage.getItem(USER_KEY);
-  return user ? JSON.parse(user) : null;
+  try {
+    const user = localStorage.getItem(USER_KEY);
+    return user ? JSON.parse(user) : null;
+  } catch {
+    clearAuth();
+    return null;
+  }
 };
 
 export const clearAuth = () => {

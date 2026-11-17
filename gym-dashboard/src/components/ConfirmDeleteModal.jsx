@@ -30,7 +30,7 @@ function ConfirmDeleteModal({
           ) : (
             "this item"
           )}
-          ? This action cannot be undone.
+          ? It will be removed from the app.
         </p>
 
         <div className="flex gap-3">

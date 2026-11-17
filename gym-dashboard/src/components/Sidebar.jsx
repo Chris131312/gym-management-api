@@ -157,7 +157,7 @@ function Sidebar({ activeTab, setActiveTab, user, onLogout, alertCount }) {
                 {user?.role || "unknown"}
               </p>
             </div>
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-all">
               <button
                 onClick={() => setIsPasswordModalOpen(true)}
                 className="p-1.5 text-gray-300 hover:text-gray-900 rounded-lg transition-colors"

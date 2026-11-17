@@ -52,7 +52,7 @@ function GymInfoSection() {
         setFormData(data);
         setOriginal(data);
       } catch (err) {
-        console.error("Error fetching gym settings:", err);
+        toast.error(err.message || "Failed to load gym settings");
       } finally {
         setIsLoading(false);
       }
@@ -225,7 +225,7 @@ function PlansSection() {
       const result = await api.get("/settings/plans/all");
       setPlans(result.data || []);
     } catch (err) {
-      console.error("Error fetching plans:", err);
+      toast.error(err.message || "Failed to load plans");
     } finally {
       setIsLoading(false);
     }
@@ -325,7 +325,7 @@ function PlansSection() {
                 <span className="text-sm font-bold text-gray-900 tabular-nums group-hover:hidden">
                   {formatPrice(plan.price)}
                 </span>
-                <div className="hidden group-hover:flex items-center gap-1">
+                <div className="hidden group-hover:flex group-focus-within:flex [@media(hover:none)]:flex items-center gap-1">
                   <button
                     onClick={() => {
                       setPlanToEdit(plan);

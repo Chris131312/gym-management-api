@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { initTheme } from "./utils/theme";
 import { isAuthenticated, getUser, clearAuth } from "./utils/auth";
 import { api } from "./api/client";
 import LoginPage from "./components/LoginPage";
 import Sidebar from "./components/Sidebar";
-import Dashboard from "./components/Dashboard";
 import MemberModal from "./components/MemberModal";
 import CheckInScanner from "./components/CheckInScanner";
 import MembersDirectory from "./components/MembersDirectory";
@@ -13,6 +12,9 @@ import StaffPage from "./components/StaffPage";
 import AuditLogPage from "./components/AuditLogPage";
 import { Toaster } from "react-hot-toast";
 import SettingsPage from "./components/SettingsPage";
+
+// Loaded on demand: pulls in recharts, which is most of the bundle
+const Dashboard = lazy(() => import("./components/Dashboard"));
 
 // Initialize theme before render
 initTheme();
@@ -51,7 +53,7 @@ function App() {
     };
 
     fetchAlertCount();
-  }, [loggedIn, user]);
+  }, [loggedIn, user, refreshKey]);
 
   const handleLoginSuccess = (userData) => {
     setUser(userData);
@@ -90,7 +92,9 @@ function App() {
 
       <main className="flex-1 p-10 overflow-y-auto">
         {activeTab === "dashboard" && user?.role === "admin" && (
-          <Dashboard user={user} />
+          <Suspense fallback={null}>
+            <Dashboard user={user} />
+          </Suspense>
         )}
 
         {activeTab === "check-in" && <CheckInScanner />}

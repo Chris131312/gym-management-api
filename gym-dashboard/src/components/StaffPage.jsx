@@ -40,7 +40,7 @@ function StaffPage({ currentUserId }) {
       const result = await api.get(`/auth/users${query ? `?${query}` : ""}`);
       setUsers(result.data || []);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      toast.error(error.message || "Failed to load users");
     } finally {
       setIsLoading(false);
     }
@@ -48,6 +48,7 @@ function StaffPage({ currentUserId }) {
 
   useEffect(() => {
     fetchUsers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only when the search changes
   }, [debouncedSearch]);
 
   const handleDelete = async () => {
@@ -263,7 +264,7 @@ function StaffPage({ currentUserId }) {
                       <span className="text-xs text-gray-400 mr-2 group-hover:hidden">
                         {formatDate(user.created_at)}
                       </span>
-                      <div className="hidden group-hover:flex items-center gap-1">
+                      <div className="hidden group-hover:flex group-focus-within:flex [@media(hover:none)]:flex items-center gap-1">
                         <button
                           onClick={() => handleOpenEdit(user)}
                           className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"

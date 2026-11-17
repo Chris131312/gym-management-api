@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { api } from "../api/client";
 import {
   Users,
@@ -34,7 +35,7 @@ function Dashboard({ user }) {
         const result = await api.get("/dashboard/stats");
         setStats(result.data);
       } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
+        toast.error(error.message || "Failed to load dashboard stats", { id: "dashboard-load" });
       } finally {
         setIsLoadingStats(false);
       }
@@ -47,7 +48,7 @@ function Dashboard({ user }) {
         const result = await api.get("/dashboard/charts");
         setChartData(result.data);
       } catch (error) {
-        console.error("Error fetching chart data:", error);
+        toast.error(error.message || "Failed to load chart data", { id: "dashboard-load" });
       } finally {
         setIsLoadingCharts(false);
       }
@@ -60,7 +61,7 @@ function Dashboard({ user }) {
         const result = await api.get("/dashboard/alerts");
         setAlerts(result.data);
       } catch (error) {
-        console.error("Error fetching alerts:", error);
+        toast.error(error.message || "Failed to load alerts", { id: "dashboard-load" });
       } finally {
         setIsLoadingAlerts(false);
       }
@@ -74,7 +75,7 @@ function Dashboard({ user }) {
         const result = await api.get("/checkins");
         setRecentCheckins(result.data || []);
       } catch (error) {
-        console.error("Error fetching recent check-ins:", error);
+        toast.error(error.message || "Failed to load recent check-ins", { id: "dashboard-load" });
       } finally {
         setIsLoadingCheckins(false);
       }

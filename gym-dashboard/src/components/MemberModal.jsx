@@ -118,11 +118,6 @@ function MemberModal({ isOpen, onClose, onSuccess, memberToEdit }) {
 
     setIsSubmitting(true);
 
-    const url = memberToEdit
-      ? `http://localhost:3000/api/members/${memberToEdit.id}`
-      : "http://localhost:3000/api/members";
-    const method = memberToEdit ? "PUT" : "POST";
-
     const payload = {
       ...formData,
       first_name: formData.first_name.trim(),
@@ -136,13 +131,13 @@ function MemberModal({ isOpen, onClose, onSuccess, memberToEdit }) {
         await api.put(`/members/${memberToEdit.id}`, payload);
         toast.success("Member updated!");
       } else {
-        await api.post(`/member/${memberToEdit.id}`, payload);
+        await api.post("/members", payload);
         toast.success("Member created");
       }
       onSuccess();
       onClose();
     } catch (error) {
-      toast.error(error.messagge || "Failed to save member.");
+      toast.error(error.message || "Failed to save member.");
     } finally {
       setIsSubmitting(false);
     }

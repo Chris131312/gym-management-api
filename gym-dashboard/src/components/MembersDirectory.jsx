@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import { api } from "../api/client";
 import { formatPhoneDisplay } from "../utils/format";
@@ -30,6 +30,8 @@ function MembersDirectory({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalMembers, setTotalMembers] = useState(0);
+  const [loadError, setLoadError] = useState(null);
+  const latestRequest = useRef(0);
   const limit = 10;
 
   // Debounce: wait 400ms after user stops typing
@@ -42,7 +44,10 @@ function MembersDirectory({
   }, [searchTerm]);
 
   const fetchPaginatedMembers = async () => {
+    // Ignore responses from superseded requests (fast typing / paging)
+    const requestId = ++latestRequest.current;
     setIsLoadingMembers(true);
+    setLoadError(null);
     try {
       const params = new URLSearchParams({
         page: currentPage,
@@ -51,18 +56,28 @@ function MembersDirectory({
         ...(statusFilter !== "all" && { status: statusFilter }),
       });
       const result = await api.get(`/members?${params.toString()}`);
+      if (requestId !== latestRequest.current) return;
+      const pages = result.totalPages || 1;
+      // Deleting the last row of the last page leaves it empty: step back
+      if (currentPage > pages) {
+        setCurrentPage(pages);
+        return;
+      }
       setMembers(result.data || []);
-      setTotalPages(result.totalPages || 1);
+      setTotalPages(pages);
       setTotalMembers(result.totalMembers || 0);
     } catch (error) {
-      console.error("Error fetching members:", error);
+      if (requestId !== latestRequest.current) return;
+      setMembers([]);
+      setLoadError(error.message || "Failed to load members");
     } finally {
-      setIsLoadingMembers(false);
+      if (requestId === latestRequest.current) setIsLoadingMembers(false);
     }
   };
 
   useEffect(() => {
     fetchPaginatedMembers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only when these inputs change
   }, [currentPage, refreshKey, debouncedSearch, statusFilter]);
 
   const handleDelete = async () => {
@@ -73,8 +88,7 @@ function MembersDirectory({
       fetchPaginatedMembers();
       toast.success("Member deleted");
     } catch (error) {
-      console.error("Error while deleting:", error);
-      toast.error("Failed to delete member");
+      toast.error(error.message || "Failed to delete member");
     }
   };
 
@@ -194,7 +208,20 @@ function MembersDirectory({
             ) : members.length === 0 ? (
               <tr>
                 <td colSpan="4" className="px-5 py-16 text-center">
-                  {debouncedSearch || statusFilter !== "all" ? (
+                  {loadError ? (
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 mb-1">
+                        Couldn't load members
+                      </p>
+                      <p className="text-xs text-gray-400 mb-4">{loadError}</p>
+                      <button
+                        onClick={fetchPaginatedMembers}
+                        className="text-sm text-gray-900 font-medium underline underline-offset-4 hover:text-gray-600 transition-colors"
+                      >
+                        Try again
+                      </button>
+                    </div>
+                  ) : debouncedSearch || statusFilter !== "all" ? (
                     <div>
                       <Search className="w-8 h-8 text-gray-200 mx-auto mb-3" />
                       <p className="text-sm font-medium text-gray-900 mb-1">
@@ -265,7 +292,7 @@ function MembersDirectory({
                   </td>
 
                   <td className="px-5 py-3.5">
-                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
                       <button
                         onClick={() => onViewProfile(member)}
                         className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"

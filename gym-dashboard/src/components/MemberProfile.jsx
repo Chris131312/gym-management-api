@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { api } from "../api/client";
 import { formatPhoneDisplay } from "../utils/format";
+import { addMonths, daysUntil, formatDate, toDateString } from "../utils/dates";
 import {
   X,
   CreditCard,
@@ -40,6 +41,7 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
       setMembershipToEdit(null);
       setMembershipToDelete(null);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reload only when the panel opens or the member changes
   }, [isOpen, member]);
 
   const fetchMemberships = async () => {
@@ -48,7 +50,7 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
       const data = await api.get(`/memberships/${member.id}`);
       setMemberships(data);
     } catch (error) {
-      toast.error("Failed to load payment history");
+      toast.error(error.message || "Failed to load payment history");
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +83,7 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
         setSelectedPlanId(longest.id);
       }
     } catch (error) {
-      toast.error("Failed to load membership plans");
+      toast.error(error.message || "Failed to load membership plans");
     } finally {
       setIsLoadingPlans(false);
     }
@@ -94,20 +96,14 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
       return { isActive: false, daysRemaining: 0, activeMembership: null };
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const sortedByExpiry = [...memberships].sort(
-      (a, b) => new Date(b.end_date) - new Date(a.end_date),
+    const latest = memberships.reduce((a, b) =>
+      b.end_date > a.end_date ? b : a,
     );
-
-    const latest = sortedByExpiry[0];
-    const expiryDate = new Date(latest.end_date);
-    const diffMs = expiryDate - today;
-    const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    const daysRemaining = daysUntil(latest.end_date);
 
     return {
-      isActive: daysRemaining > 0,
+      // Matches the backend rule: valid through end_date inclusive
+      isActive: daysRemaining >= 0,
       daysRemaining,
       activeMembership: latest,
     };
@@ -117,14 +113,13 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
     if (!selectedPlan) return null;
 
     const start = new Date();
-    const end = new Date();
-    end.setMonth(end.getMonth() + selectedPlan.duration_months);
+    const end = addMonths(start, selectedPlan.duration_months);
 
     return {
       startDate: start,
       endDate: end,
-      startDateISO: start.toISOString().split("T")[0],
-      endDateISO: end.toISOString().split("T")[0],
+      startDateISO: toDateString(start),
+      endDateISO: toDateString(end),
     };
   }, [selectedPlan]);
 
@@ -171,13 +166,6 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
   };
 
   if (!isOpen || !member) return null;
-
-  const formatDate = (date) =>
-    new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
 
   const formatCurrency = (amount) => `$${parseFloat(amount).toFixed(2)}`;
 
@@ -282,7 +270,6 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
           <CheckinHistory
             checkins={checkins}
             isLoading={isLoadingCheckins}
-            formatDate={formatDate}
           />
         </div>
       </div>
@@ -297,7 +284,6 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
             fetchMemberships();
             onMemberUpdated();
           }}
-          formatCurrency={formatCurrency}
         />
       )}
 
@@ -380,7 +366,9 @@ function MembershipBadge({ status }) {
     return (
       <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600">
         <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-        Expires in {status.daysRemaining} days
+        {status.daysRemaining === 0
+          ? "Expires today"
+          : `Expires in ${status.daysRemaining} days`}
       </span>
     );
   }
@@ -595,7 +583,7 @@ function PaymentHistory({
                     >
                       {formatCurrency(plan.price)}
                     </span>
-                    <div className="hidden group-hover:flex items-center gap-1">
+                    <div className="hidden group-hover:flex group-focus-within:flex [@media(hover:none)]:flex items-center gap-1">
                       {userRole === "admin" && (
                         <button
                           onClick={() => onEdit(plan)}
@@ -642,7 +630,6 @@ function EditMembershipModal({
   membership,
   onClose,
   onSuccess,
-  formatCurrency,
 }) {
   const [formData, setFormData] = useState({
     plan_name: membership.plan_name || "",
@@ -776,7 +763,7 @@ function EditMembershipModal({
 
 // ─── Check-in History ───────────────────────────────────────
 
-function CheckinHistory({ checkins, isLoading, formatDate }) {
+function CheckinHistory({ checkins, isLoading }) {
   const formatTime = (date) =>
     new Date(date).toLocaleTimeString([], {
       hour: "2-digit",

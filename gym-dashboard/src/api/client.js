@@ -1,6 +1,6 @@
 import { getToken, clearAuth } from "../utils/auth";
 
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 async function request(endpoint, options = {}) {
   const url = `${BASE_URL}${endpoint}`;
@@ -16,12 +16,21 @@ async function request(endpoint, options = {}) {
     ...options,
   };
 
-  const response = await fetch(url, config);
+  let response;
+  try {
+    response = await fetch(url, config);
+  } catch {
+    throw new Error("Cannot reach the server. Check your connection.");
+  }
 
   let data = null;
   const text = await response.text();
   if (text) {
-    data = JSON.parse(text);
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = null;
+    }
   }
 
   // A 401 on the login form means "wrong credentials", not "session expired"

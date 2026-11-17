@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { api } from "../api/client";
 import {
   ScrollText,
@@ -19,6 +20,8 @@ const ENTITY_LABELS = {
   member: "Member",
   membership: "Membership",
   user: "Staff",
+  plan: "Plan",
+  settings: "Settings",
 };
 
 function AuditLogPage() {
@@ -40,7 +43,7 @@ function AuditLogPage() {
       setLogs(result.data || []);
       setTotalPages(result.totalPages || 1);
     } catch (error) {
-      console.error("Error fetching audit logs:", error);
+      toast.error(error.message || "Failed to load audit logs");
     } finally {
       setIsLoading(false);
     }
@@ -48,6 +51,7 @@ function AuditLogPage() {
 
   useEffect(() => {
     fetchLogs();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only when these inputs change
   }, [currentPage, entityFilter]);
 
   const formatDateTime = (date) =>
@@ -98,8 +102,8 @@ function AuditLogPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-2 mb-6">
-        {["all", "member", "membership", "user"].map((filter) => (
+      <div className="flex flex-wrap gap-2 mb-6">
+        {["all", ...Object.keys(ENTITY_LABELS)].map((filter) => (
           <button
             key={filter}
             onClick={() => {

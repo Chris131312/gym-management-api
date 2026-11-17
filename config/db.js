@@ -1,5 +1,10 @@
-const { Pool } = require("pg");
+const { Pool, types } = require("pg");
 require("dotenv").config();
+
+// Return DATE columns as plain "YYYY-MM-DD" strings. The default parser builds
+// a JS Date at server-local midnight, which shifts the day once serialized to
+// UTC JSON and read in a different timezone.
+types.setTypeParser(types.builtins.DATE, (value) => value);
 
 // DATABASE_URL presence is enforced by config/validateEnv.js at startup
 const pool = new Pool({
