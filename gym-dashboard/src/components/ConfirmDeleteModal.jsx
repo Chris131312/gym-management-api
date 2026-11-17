@@ -1,4 +1,5 @@
 import React from "react";
+import Modal from "./Modal";
 import { Trash2, Loader2 } from "lucide-react";
 
 function ConfirmDeleteModal({
@@ -12,7 +13,7 @@ function ConfirmDeleteModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+    <Modal onClose={onClose} label={title || "Delete"} isBusy={isLoading}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-red-100 rounded-full">
@@ -57,7 +58,7 @@ function ConfirmDeleteModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 

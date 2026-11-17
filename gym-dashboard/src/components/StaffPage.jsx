@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Modal from "./Modal";
 import { api } from "../api/client";
 import {
   Shield,
@@ -304,7 +305,7 @@ function StaffPage({ currentUserId }) {
 
       {/* Delete Confirmation */}
       {userToDelete && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <Modal onClose={() => setUserToDelete(null)} label="Remove user" isBusy={isDeleting}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-red-100 rounded-full">
@@ -343,7 +344,7 @@ function StaffPage({ currentUserId }) {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );
@@ -444,7 +445,7 @@ function StaffModal({ isOpen, onClose, onSuccess, userToEdit }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center backdrop-blur-sm p-4">
+    <Modal onClose={onClose} label={isEditing ? "Edit user" : "Register new user"} isBusy={isSubmitting}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
           <h2 className="text-lg font-bold text-gray-900 tracking-tight">
@@ -454,7 +455,7 @@ function StaffModal({ isOpen, onClose, onSuccess, userToEdit }) {
             onClick={onClose}
             disabled={isSubmitting}
             className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
+           aria-label="Close">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -462,10 +463,10 @@ function StaffModal({ isOpen, onClose, onSuccess, userToEdit }) {
         <div className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="StaffModal-full_name">
                 Full Name <span className="text-red-500">*</span>
               </label>
-              <input
+              <input id="StaffModal-full_name"
                 name="full_name"
                 value={formData.full_name}
                 onChange={handleChange}
@@ -483,10 +484,10 @@ function StaffModal({ isOpen, onClose, onSuccess, userToEdit }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="StaffModal-email">
                 Email <span className="text-red-500">*</span>
               </label>
-              <input
+              <input id="StaffModal-email"
                 name="email"
                 type="email"
                 value={formData.email}
@@ -505,10 +506,10 @@ function StaffModal({ isOpen, onClose, onSuccess, userToEdit }) {
 
             {!isEditing && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="StaffModal-password">
                   Password <span className="text-red-500">*</span>
                 </label>
-                <input
+                <input id="StaffModal-password"
                   name="password"
                   type="password"
                   value={formData.password}
@@ -527,10 +528,10 @@ function StaffModal({ isOpen, onClose, onSuccess, userToEdit }) {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="StaffModal-role">
                 Role
               </label>
-              <select
+              <select id="StaffModal-role"
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
@@ -590,7 +591,7 @@ function StaffModal({ isOpen, onClose, onSuccess, userToEdit }) {
           </form>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 

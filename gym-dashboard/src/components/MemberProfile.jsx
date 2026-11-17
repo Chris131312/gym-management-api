@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import Modal from "./Modal";
 import { api } from "../api/client";
 import { formatPhoneDisplay } from "../utils/format";
 import { addMonths, daysUntil, formatDate, toDateString } from "../utils/dates";
@@ -170,7 +171,7 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
   const formatCurrency = (amount) => `$${parseFloat(amount).toFixed(2)}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <Modal onClose={onClose} label={`${member.first_name} ${member.last_name} profile`} className="fixed inset-0 z-50 flex justify-end">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
@@ -196,7 +197,7 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
           <button
             onClick={onClose}
             className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-          >
+           aria-label="Close">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -289,7 +290,7 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
 
       {/* Delete Confirmation */}
       {membershipToDelete && (
-        <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center backdrop-blur-sm p-4">
+        <Modal onClose={() => setMembershipToDelete(null)} label="Delete membership" isBusy={isDeleting} className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-red-100 rounded-full">
@@ -335,9 +336,9 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
-    </div>
+    </Modal>
   );
 }
 
@@ -662,7 +663,7 @@ function EditMembershipModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center backdrop-blur-sm p-4">
+    <Modal onClose={onClose} label="Edit membership" isBusy={isSubmitting} className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
           <h3 className="text-lg font-bold text-gray-900 tracking-tight">
@@ -672,16 +673,16 @@ function EditMembershipModal({
             onClick={onClose}
             disabled={isSubmitting}
             className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
+           aria-label="Close">
             <X className="w-5 h-5" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="EditMembershipModal-plan_name">
               Plan Name
             </label>
-            <input
+            <input id="EditMembershipModal-plan_name"
               name="plan_name"
               value={formData.plan_name}
               onChange={handleChange}
@@ -690,10 +691,10 @@ function EditMembershipModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="EditMembershipModal-price">
               Price ($)
             </label>
-            <input
+            <input id="EditMembershipModal-price"
               name="price"
               type="number"
               step="0.01"
@@ -705,10 +706,10 @@ function EditMembershipModal({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="EditMembershipModal-start_date">
                 Start Date
               </label>
-              <input
+              <input id="EditMembershipModal-start_date"
                 name="start_date"
                 type="date"
                 value={formData.start_date}
@@ -718,10 +719,10 @@ function EditMembershipModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="EditMembershipModal-end_date">
                 End Date
               </label>
-              <input
+              <input id="EditMembershipModal-end_date"
                 name="end_date"
                 type="date"
                 value={formData.end_date}
@@ -757,7 +758,7 @@ function EditMembershipModal({
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }
 

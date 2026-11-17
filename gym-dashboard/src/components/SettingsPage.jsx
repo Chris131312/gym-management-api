@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Modal from "./Modal";
 import { api } from "../api/client";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import {
@@ -125,10 +126,10 @@ function GymInfoSection() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="GymInfoSection-gym_name">
               Gym Name <span className="text-red-500">*</span>
             </label>
-            <input
+            <input id="GymInfoSection-gym_name"
               name="gym_name"
               value={formData.gym_name}
               onChange={handleChange}
@@ -144,10 +145,10 @@ function GymInfoSection() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="GymInfoSection-address">
               Address
             </label>
-            <input
+            <input id="GymInfoSection-address"
               name="address"
               value={formData.address}
               onChange={handleChange}
@@ -159,10 +160,10 @@ function GymInfoSection() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="GymInfoSection-phone">
                 Phone
               </label>
-              <input
+              <input id="GymInfoSection-phone"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
@@ -172,10 +173,10 @@ function GymInfoSection() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="GymInfoSection-email">
                 Email
               </label>
-              <input
+              <input id="GymInfoSection-email"
                 name="email"
                 type="email"
                 value={formData.email}
@@ -480,7 +481,7 @@ function PlanModal({ isOpen, onClose, onSuccess, planToEdit }) {
     ) : null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+    <Modal onClose={onClose} label={isEditing ? "Edit plan" : "New plan"} isBusy={isSubmitting}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
           <h2 className="text-lg font-bold text-gray-900 tracking-tight">
@@ -490,17 +491,17 @@ function PlanModal({ isOpen, onClose, onSuccess, planToEdit }) {
             onClick={onClose}
             disabled={isSubmitting}
             className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
+           aria-label="Close">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="PlanModal-name">
               Plan Name <span className="text-red-500">*</span>
             </label>
-            <input
+            <input id="PlanModal-name"
               name="name"
               value={formData.name}
               onChange={handleChange}
@@ -514,10 +515,10 @@ function PlanModal({ isOpen, onClose, onSuccess, planToEdit }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="PlanModal-price">
                 Price ($) <span className="text-red-500">*</span>
               </label>
-              <input
+              <input id="PlanModal-price"
                 name="price"
                 type="number"
                 step="0.01"
@@ -530,10 +531,10 @@ function PlanModal({ isOpen, onClose, onSuccess, planToEdit }) {
               <FieldError message={errors.price} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="PlanModal-duration_months">
                 Duration (months) <span className="text-red-500">*</span>
               </label>
-              <input
+              <input id="PlanModal-duration_months"
                 name="duration_months"
                 type="number"
                 step="1"
@@ -548,10 +549,10 @@ function PlanModal({ isOpen, onClose, onSuccess, planToEdit }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="PlanModal-description">
               Description
             </label>
-            <input
+            <input id="PlanModal-description"
               name="description"
               value={formData.description}
               onChange={handleChange}
@@ -562,10 +563,10 @@ function PlanModal({ isOpen, onClose, onSuccess, planToEdit }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="PlanModal-sort_order">
               Display Order
             </label>
-            <input
+            <input id="PlanModal-sort_order"
               name="sort_order"
               type="number"
               step="1"
@@ -626,7 +627,7 @@ function PlanModal({ isOpen, onClose, onSuccess, planToEdit }) {
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }
 

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Modal from "./Modal";
 import {
   Dumbbell,
   LayoutDashboard,
@@ -253,7 +254,7 @@ function ChangePasswordModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+    <Modal onClose={handleClose} label="Change password" isBusy={isSubmitting}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
           <h2 className="text-lg font-bold text-gray-900 tracking-tight">
@@ -263,7 +264,7 @@ function ChangePasswordModal({ isOpen, onClose }) {
             onClick={handleClose}
             disabled={isSubmitting}
             className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
+           aria-label="Close">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -279,10 +280,10 @@ function ChangePasswordModal({ isOpen, onClose }) {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="ChangePasswordModal-currentPassword">
                   Current Password
                 </label>
-                <input
+                <input id="ChangePasswordModal-currentPassword"
                   name="currentPassword"
                   type="password"
                   value={formData.currentPassword}
@@ -301,10 +302,10 @@ function ChangePasswordModal({ isOpen, onClose }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="ChangePasswordModal-newPassword">
                   New Password
                 </label>
-                <input
+                <input id="ChangePasswordModal-newPassword"
                   name="newPassword"
                   type="password"
                   value={formData.newPassword}
@@ -322,10 +323,10 @@ function ChangePasswordModal({ isOpen, onClose }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="ChangePasswordModal-confirmPassword">
                   Confirm New Password
                 </label>
-                <input
+                <input id="ChangePasswordModal-confirmPassword"
                   name="confirmPassword"
                   type="password"
                   value={formData.confirmPassword}
@@ -370,7 +371,7 @@ function ChangePasswordModal({ isOpen, onClose }) {
           )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 

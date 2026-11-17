@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Modal from "./Modal";
 import { api } from "../api/client";
 import { X, AlertCircle, Loader2 } from "lucide-react";
 import { formatPhoneInput } from "../utils/format";
@@ -152,7 +153,7 @@ function MemberModal({ isOpen, onClose, onSuccess, memberToEdit }) {
     touched[fieldName] && errors[fieldName];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center backdrop-blur-sm p-4">
+    <Modal onClose={onClose} label={modalTitle} isBusy={isSubmitting} className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
           <h2 className="text-xl font-bold text-gray-800">{modalTitle}</h2>
@@ -271,7 +272,7 @@ function MemberModal({ isOpen, onClose, onSuccess, memberToEdit }) {
           </form>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
