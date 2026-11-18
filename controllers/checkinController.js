@@ -2,6 +2,7 @@ const pool = require("../config/db");
 const { NotFoundError, ForbiddenError } = require("../utils/errors");
 const { todayInGym } = require("../utils/dates");
 const { parsePagination } = require("../utils/pagination");
+const { assertActiveMember } = require("../utils/members");
 
 const registerCheckin = async (req, res) => {
   const { member_id } = req.body;
@@ -80,6 +81,8 @@ const getRecentCheckins = async (req, res) => {
 
 const getCheckinsByMember = async (req, res) => {
   const { member_id } = req.params;
+
+  await assertActiveMember(pool, member_id);
 
   const totalResult = await pool.query(
     "SELECT COUNT(*) FROM check_ins WHERE member_id = $1",

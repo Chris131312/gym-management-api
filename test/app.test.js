@@ -76,6 +76,36 @@ test("tokens signed with a different JWT algorithm are rejected", async () => {
   assert.match((await res.json()).message, /Invalid token/);
 });
 
+test("malformed percent-encoding in a path is a 400, not a 500", async () => {
+  const res = await fetch(`${base}/api/members/%E0%A4%A`);
+  assert.equal(res.status, 400);
+  assert.equal((await res.json()).success, false);
+});
+
+test("bad Content-Encoding is a client error (415 unknown, 400 corrupt), not a 500", async () => {
+  const post = (encoding) =>
+    fetch(`${base}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Content-Encoding": encoding },
+      body: "{}",
+    });
+  assert.equal((await post("foo")).status, 415);
+  assert.equal((await post("br")).status, 400); // supported, but "{}" isn't valid brotli
+});
+
+test("readiness reports 503 when the database is unreachable (liveness stays 200)", async () => {
+  const ready = await fetch(`${base}/api/health/ready`);
+  assert.equal(ready.status, 503);
+  assert.equal((await ready.json()).database, "down");
+  assert.equal((await fetch(`${base}/api/health`)).status, 200);
+});
+
+test("the pool is configured with connection and statement timeouts", () => {
+  const pool = require("../config/db");
+  assert.equal(pool.options.connectionTimeoutMillis, 5000);
+  assert.equal(pool.options.statement_timeout, 15000);
+});
+
 // Keep last: exhausts the shared per-IP budget
 test("login is rate limited after repeated failures", async () => {
   let last;

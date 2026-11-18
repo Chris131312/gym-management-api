@@ -4,9 +4,12 @@ const { logAction } = require("../utils/auditLog");
 const { withTransaction } = require("../utils/transaction");
 const { todayInGym, addMonthsToDate } = require("../utils/dates");
 const { syncMemberActive } = require("../utils/memberships");
+const { assertActiveMember } = require("../utils/members");
 
 const getMembershipsByMember = async (req, res) => {
   const { member_id } = req.params;
+
+  await assertActiveMember(pool, member_id);
 
   const result = await pool.query(
     "SELECT * FROM memberships WHERE member_id = $1 ORDER BY end_date DESC",
@@ -88,7 +91,9 @@ const updateMembership = async (req, res) => {
   const membership = await withTransaction(async (client) => {
     const result = await client.query(
       `UPDATE memberships SET plan_name = $1, price = $2, start_date = $3, end_date = $4
-       WHERE id = $5 RETURNING *`,
+       WHERE id = $5
+         AND member_id IN (SELECT id FROM members WHERE deleted_at IS NULL)
+       RETURNING *`,
       [plan_name, price, start_date, end_date, id],
     );
 
@@ -128,7 +133,10 @@ const deleteMembership = async (req, res) => {
 
   const membership = await withTransaction(async (client) => {
     const result = await client.query(
-      "DELETE FROM memberships WHERE id = $1 RETURNING *",
+      `DELETE FROM memberships
+       WHERE id = $1
+         AND member_id IN (SELECT id FROM members WHERE deleted_at IS NULL)
+       RETURNING *`,
       [id],
     );
 

@@ -62,6 +62,7 @@ CREATE TABLE gym_settings (
   email      VARCHAR,
   updated_at TIMESTAMP DEFAULT now()
 );
+INSERT INTO gym_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING; -- the API only UPDATEs this row (migration 005)
 
 CREATE TABLE audit_logs (
   id           SERIAL PRIMARY KEY,

@@ -22,6 +22,8 @@ npm run dev
 | `FRONTEND_URL` | Allowed CORS origin(s), comma-separated |
 | `GYM_TIMEZONE` | IANA timezone that defines "today" (default `UTC`) |
 | `TRUST_PROXY` | Number of reverse-proxy hops (default `1` in production) |
+| `DB_CONNECT_TIMEOUT_MS` | Max wait for a pooled connection (default `5000`) |
+| `DB_STATEMENT_TIMEOUT_MS` | Max time per SQL statement (default `15000`; migrations are exempt) |
 
 ## Scripts
 
@@ -55,6 +57,10 @@ npm run dev
 All routes except `/api/health` and `POST /api/auth/login` need
 `Authorization: Bearer <token>`. IDs of members, memberships and check-ins are
 UUIDs; users and plans use integers.
+
+`GET /api/health` is a liveness probe; point hosting/load-balancer health
+checks at `GET /api/health/ready`, which also queries the database and
+returns 503 when it is unreachable.
 
 `/api/auth` · `/api/members` · `/api/memberships` · `/api/checkins` ·
 `/api/dashboard` · `/api/audit-logs` · `/api/settings`

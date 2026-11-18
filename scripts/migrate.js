@@ -28,6 +28,8 @@ const dir = path.join(__dirname, "..", "db", "migrations");
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
+      // Migrations may legitimately outlast the API's per-statement timeout
+      await client.query("SET LOCAL statement_timeout = 0");
       await client.query(fs.readFileSync(path.join(dir, file), "utf8"));
       await client.query("INSERT INTO schema_migrations (filename) VALUES ($1)", [file]);
       await client.query("COMMIT");

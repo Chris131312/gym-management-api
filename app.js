@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 
+const pool = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
 const { NotFoundError } = require("./utils/errors");
 
@@ -46,6 +47,17 @@ app.get("/api/health", (req, res) => {
     success: true,
     message: "Gym Management API is running smoothly.",
   });
+});
+
+// Readiness: also proves the database is reachable, for load balancer / hosting
+// health checks. /api/health above stays a cheap liveness probe.
+app.get("/api/health/ready", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    res.status(200).json({ success: true, database: "up" });
+  } catch {
+    res.status(503).json({ success: false, database: "down" });
+  }
 });
 
 // Mount routes

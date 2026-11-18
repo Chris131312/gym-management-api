@@ -35,6 +35,17 @@ function errorHandler(err, req, res, next) {
     });
   }
 
+  // Other client errors raised by Express/body-parser (bad percent-encoding in
+  // a path, unsupported Content-Encoding, ...) already carry their 4xx status
+  const clientStatus = err.status ?? err.statusCode;
+  if (Number.isInteger(clientStatus) && clientStatus >= 400 && clientStatus < 500) {
+    return res.status(clientStatus).json({
+      success: false,
+      status: "fail",
+      message: err.expose ? err.message : "Bad request",
+    });
+  }
+
   if (err.code === "23505") {
     return res.status(409).json({
       success: false,

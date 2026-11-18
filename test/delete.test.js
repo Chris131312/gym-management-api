@@ -12,14 +12,15 @@ const client = {
     if (next instanceof Error) throw next;
     return next || { rows: [], rowCount: 0 };
   },
-  release: () => log.push({ sql: "RELEASE" }),
+  release: (err) => log.push({ sql: "RELEASE", err }),
 };
 const fakePool = { connect: async () => client, query: client.query };
 const dbPath = require.resolve("../config/db");
 require.cache[dbPath] = { id: dbPath, filename: dbPath, loaded: true, exports: fakePool };
 
 const { deleteMember } = require("../controllers/memberController");
-const { deleteMembership, updateMembership, createMembership } = require("../controllers/membershipController");
+const { deleteMembership, updateMembership, createMembership, getMembershipsByMember } = require("../controllers/membershipController");
+const { getCheckinsByMember } = require("../controllers/checkinController");
 const { todayInGym, addMonthsToDate } = require("../utils/dates");
 const { NotFoundError } = require("../utils/errors");
 
@@ -141,4 +142,41 @@ test("createMembership rejects an unknown or inactive plan and writes nothing", 
   );
   assert.ok(!log.some((l) => /INSERT INTO memberships/.test(l.full || "")));
   assert.deepEqual(verbs(), ["BEGIN", "SELECT", "SELECT", "ROLLBACK", "RELEASE"]);
+});
+
+test("a failed ROLLBACK keeps the original error and discards the connection", async () => {
+  script = [{ rows: [] }, { rows: [] }, new Error("connection lost")]; // BEGIN, UPDATE (no rows), ROLLBACK fails
+  await assert.rejects(deleteMember(req(UUID), res()), NotFoundError);
+  const release = log.find((l) => l.sql === "RELEASE");
+  assert.match(release.err.message, /connection lost/, "release(err) destroys the client");
+});
+
+test("a clean transaction releases the connection back to the pool", async () => {
+  script = [{ rows: [] }, { rows: [] }];
+  await assert.rejects(deleteMember(req(UUID), res()), NotFoundError);
+  assert.equal(log.find((l) => l.sql === "RELEASE").err, undefined);
+});
+
+test("membership and check-in history of a missing/deleted member is a 404", async () => {
+  for (const handler of [getMembershipsByMember, getCheckinsByMember]) {
+    log.length = 0;
+    script = [{ rows: [] }]; // member lookup finds nothing
+    await assert.rejects(handler({ params: { member_id: UUID } }, res()), NotFoundError);
+    assert.match(log[0].full, /FROM members WHERE id = \$1 AND deleted_at IS NULL/);
+    assert.equal(log.length, 1, "no history query after the 404");
+  }
+});
+
+test("editing or deleting a membership of a deleted member finds nothing", async () => {
+  script = [{ rows: [] }, { rows: [] }];
+  await assert.rejects(deleteMembership(req("1"), res()), NotFoundError);
+  assert.match(log[1].full, /member_id IN \(SELECT id FROM members WHERE deleted_at IS NULL\)/);
+
+  log.length = 0;
+  script = [{ rows: [] }, { rows: [] }];
+  await assert.rejects(
+    updateMembership({ ...req("1"), body: { plan_name: "P", price: 1, start_date: "2026-01-01", end_date: "2027-01-01" } }, res()),
+    NotFoundError,
+  );
+  assert.match(log[1].full, /member_id IN \(SELECT id FROM members WHERE deleted_at IS NULL\)/);
 });
