@@ -33,12 +33,17 @@ const endNotBeforeStart = {
   },
 };
 
-const createMembershipSchema = z
-  .object({
-    member_id: z.uuid({ error: "Invalid member id" }),
-    ...membershipFields,
-  })
-  .refine(endNotBeforeStart.check, endNotBeforeStart.options);
+// A sale only names the plan: the server takes name, price and dates from
+// membership_plans, so a client can't invent them. Unknown keys (an old
+// client still sending price/dates) are stripped, not trusted.
+const createMembershipSchema = z.object({
+  member_id: z.uuid({ error: "Invalid member id" }),
+  plan_id: z.coerce
+    .number({ error: "Plan is required" })
+    .int({ error: "Invalid plan id" })
+    .positive({ error: "Invalid plan id" })
+    .max(2147483647, { error: "Invalid plan id" }),
+});
 
 const updateMembershipSchema = z
   .object(membershipFields)

@@ -9,7 +9,8 @@ CREATE TABLE users (
   full_name     VARCHAR NOT NULL,
   role          VARCHAR NOT NULL CHECK (role IN ('admin', 'receptionist')),
   is_active     BOOLEAN DEFAULT true,
-  created_at    TIMESTAMP DEFAULT now()
+  created_at    TIMESTAMP DEFAULT now(),
+  password_changed_at TIMESTAMPTZ -- tokens older than this are rejected (migration 004)
 );
 
 CREATE TABLE members (

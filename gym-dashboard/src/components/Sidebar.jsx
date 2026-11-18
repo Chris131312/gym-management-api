@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { api } from "../api/client";
 import { getTheme, toggleTheme } from "../utils/theme";
+import { getUser, saveAuth } from "../utils/auth";
 import toast from "react-hot-toast";
 
 // ─── Nav Item (declared OUTSIDE Sidebar to avoid re-creation on render) ────
@@ -226,10 +227,13 @@ function ChangePasswordModal({ isOpen, onClose }) {
     setIsSubmitting(true);
 
     try {
-      await api.put("/auth/change-password", {
+      const result = await api.put("/auth/change-password", {
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword,
       });
+      // The server revokes the old token on a password change and returns a new one
+      const user = getUser();
+      if (result?.data?.token && user) saveAuth(result.data.token, user);
       setSuccess(true);
       toast.success("Password changed successfully");
       setTimeout(() => {

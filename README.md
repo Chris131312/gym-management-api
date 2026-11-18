@@ -39,7 +39,16 @@ npm run dev
   can be registered again.
 - Deletes and their audit-log entry share one transaction: if the audit insert
   fails, the delete is rolled back.
-- Failed logins are rate limited (10 per 15 min per IP).
+- Failed logins are rate limited (10 per 15 min per IP); failed
+  change-password attempts, 5 per 15 min per user.
+- **Selling a membership** (`POST /api/memberships`) takes only `member_id` and
+  `plan_id`. Name, price and dates come from the active plan (starts today in
+  `GYM_TIMEZONE`, ends `duration_months` later), so a client can't set its own
+  price or expiry. Admins adjust an existing membership with `PUT`.
+- Changing a password **revokes every token issued before it** (the response
+  includes a fresh token for the current session). Requires migration 004.
+- CI (`.github/workflows/ci.yml`) runs the backend tests and the frontend
+  lint + build, plus `npm audit` on production dependencies, on every push and PR.
 
 ## Endpoints
 

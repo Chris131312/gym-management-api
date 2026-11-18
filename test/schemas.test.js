@@ -40,7 +40,7 @@ test("check-in requires a UUID member_id", () => {
   assert.equal(checkinSchema.safeParse({}).success, false);
 });
 
-test("membership rejects negative price and end before start", () => {
+test("membership: admin edits validate values, sales only take a plan id", () => {
   const ok = {
     member_id: UUID,
     plan_name: "Monthly",
@@ -48,18 +48,25 @@ test("membership rejects negative price and end before start", () => {
     start_date: "2026-01-01",
     end_date: "2026-02-01",
   };
-  assert.equal(createMembershipSchema.safeParse(ok).success, true);
-  assert.equal(createMembershipSchema.safeParse({ ...ok, price: -1 }).success, false);
-  assert.equal(
-    createMembershipSchema.safeParse({ ...ok, end_date: "2025-12-31" }).success,
-    false,
-  );
-  assert.equal(
-    createMembershipSchema.safeParse({ ...ok, start_date: "2026-02-30" }).success,
-    false,
-  );
+  // updateMembership (admin edit) still takes explicit values
   const { member_id, ...fields } = ok;
   assert.equal(updateMembershipSchema.safeParse(fields).success, true);
+  assert.equal(updateMembershipSchema.safeParse({ ...fields, price: -1 }).success, false);
+  assert.equal(
+    updateMembershipSchema.safeParse({ ...fields, end_date: "2025-12-31" }).success,
+    false,
+  );
+  assert.equal(
+    updateMembershipSchema.safeParse({ ...fields, start_date: "2026-02-30" }).success,
+    false,
+  );
+
+  // a sale only names the plan; client-sent price/dates are stripped
+  const sale = createMembershipSchema.parse({ member_id: ok.member_id, plan_id: "3", price: 0, end_date: "2099-01-01" });
+  assert.deepEqual(sale, { member_id: ok.member_id, plan_id: 3 });
+  assert.equal(createMembershipSchema.safeParse({ member_id: ok.member_id }).success, false);
+  assert.equal(createMembershipSchema.safeParse({ member_id: ok.member_id, plan_id: 0 }).success, false);
+  assert.equal(createMembershipSchema.safeParse({ member_id: ok.member_id, plan_id: "x" }).success, false);
 });
 
 test("plans: partial update keeps omitted fields undefined", () => {

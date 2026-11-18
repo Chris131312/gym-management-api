@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import Modal from "./Modal";
 import { api } from "../api/client";
 import { formatPhoneDisplay } from "../utils/format";
-import { addMonths, daysUntil, formatDate, toDateString } from "../utils/dates";
+import { addMonths, daysUntil, formatDate } from "../utils/dates";
 import {
   X,
   CreditCard,
@@ -119,8 +119,6 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
     return {
       startDate: start,
       endDate: end,
-      startDateISO: toDateString(start),
-      endDateISO: toDateString(end),
     };
   }, [selectedPlan]);
 
@@ -128,16 +126,12 @@ function MemberProfile({ isOpen, onClose, member, onMemberUpdated, userRole }) {
     if (!selectedPlan || !newPlanDates) return;
     setStep("processing");
 
-    const payload = {
-      member_id: member.id,
-      plan_name: selectedPlan.name,
-      price: parseFloat(selectedPlan.price),
-      start_date: newPlanDates.startDateISO,
-      end_date: newPlanDates.endDateISO,
-    };
-
     try {
-      await api.post("/memberships", payload);
+      // The server prices the sale and sets the dates from the plan
+      await api.post("/memberships", {
+        member_id: member.id,
+        plan_id: selectedPlan.id,
+      });
       toast.success(
         `Payment of $${parseFloat(selectedPlan.price).toFixed(2)} processed successfully`,
       );

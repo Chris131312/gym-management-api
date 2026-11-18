@@ -28,7 +28,7 @@ const protect = async (req, res, next) => {
   }
 
   const result = await pool.query(
-    "SELECT id, email, full_name, role, is_active FROM users WHERE id = $1",
+    "SELECT id, email, full_name, role, is_active, password_changed_at FROM users WHERE id = $1",
     [decoded.id],
   );
 
@@ -42,7 +42,17 @@ const protect = async (req, res, next) => {
     throw new UnauthorizedError("Account is deactivated");
   }
 
-  req.user = user;
+  // A password change revokes every token issued before it. Compared in whole
+  // seconds because a JWT's iat has no sub-second precision.
+  if (
+    user.password_changed_at &&
+    !(decoded.iat >= Math.floor(user.password_changed_at.getTime() / 1000))
+  ) {
+    throw new UnauthorizedError("Password was changed. Please log in again");
+  }
+
+  const { password_changed_at, ...safeUser } = user;
+  req.user = safeUser;
   next();
 };
 

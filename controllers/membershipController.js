@@ -2,7 +2,7 @@ const pool = require("../config/db");
 const { NotFoundError } = require("../utils/errors");
 const { logAction } = require("../utils/auditLog");
 const { withTransaction } = require("../utils/transaction");
-const { todayInGym } = require("../utils/dates");
+const { todayInGym, addMonthsToDate } = require("../utils/dates");
 const { syncMemberActive } = require("../utils/memberships");
 
 const getMembershipsByMember = async (req, res) => {
@@ -17,7 +17,7 @@ const getMembershipsByMember = async (req, res) => {
 };
 
 const createMembership = async (req, res) => {
-  const { member_id, plan_name, price, start_date, end_date } = req.body;
+  const { member_id, plan_id } = req.body;
 
   // Insert + reactivate must succeed or fail together
   const membership = await withTransaction(async (client) => {
@@ -29,18 +29,30 @@ const createMembership = async (req, res) => {
       throw new NotFoundError("Member");
     }
 
+    // Name, price and duration come from the plan, never from the client
+    const planResult = await client.query(
+      `SELECT name, price, duration_months FROM membership_plans
+       WHERE id = $1 AND is_active = true`,
+      [plan_id],
+    );
+    if (planResult.rows.length === 0) {
+      throw new NotFoundError("Plan");
+    }
+    const plan = planResult.rows[0];
+
+    const startDate = todayInGym();
+    const endDate = addMonthsToDate(startDate, plan.duration_months);
+
     const result = await client.query(
       `INSERT INTO memberships (member_id, plan_name, price, start_date, end_date)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [member_id, plan_name, price, start_date, end_date],
+      [member_id, plan.name, plan.price, startDate, endDate],
     );
 
-    // Only reactivate if the plan is still valid (not backdated/expired)
-    if (end_date >= todayInGym()) {
-      await client.query("UPDATE members SET is_active = true WHERE id = $1", [
-        member_id,
-      ]);
-    }
+    // The new plan is valid from today, so the member can check in now
+    await client.query("UPDATE members SET is_active = true WHERE id = $1", [
+      member_id,
+    ]);
 
     return result.rows[0];
   });
@@ -51,8 +63,14 @@ const createMembership = async (req, res) => {
     action: "create",
     entityType: "membership",
     entityId: membership.id,
-    entityLabel: plan_name,
-    details: { price, member_id, start_date, end_date },
+    entityLabel: membership.plan_name,
+    details: {
+      plan_id,
+      price: parseFloat(membership.price),
+      member_id,
+      start_date: membership.start_date,
+      end_date: membership.end_date,
+    },
   });
 
   res.status(201).json({

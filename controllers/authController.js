@@ -256,10 +256,13 @@ const changePassword = async (req, res) => {
 
   const newHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
-  await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [
-    newHash,
-    userId,
-  ]);
+  // Stamped with this server's clock (not the DB's) so it is comparable to the
+  // iat of the fresh token issued below, whatever the DB clock says
+  const changedAt = new Date();
+  await pool.query(
+    "UPDATE users SET password_hash = $1, password_changed_at = $2 WHERE id = $3",
+    [newHash, changedAt, userId],
+  );
 
   await logAction({
     userId,
@@ -271,9 +274,11 @@ const changePassword = async (req, res) => {
     details: { fields: ["password"] },
   });
 
+  // The old token is now revoked, so hand this session a fresh one
   res.status(200).json({
     success: true,
     message: "Password changed successfully",
+    data: { token: generateToken(req.user) },
   });
 };
 

@@ -19,7 +19,8 @@ const dbPath = require.resolve("../config/db");
 require.cache[dbPath] = { id: dbPath, filename: dbPath, loaded: true, exports: fakePool };
 
 const { deleteMember } = require("../controllers/memberController");
-const { deleteMembership, updateMembership } = require("../controllers/membershipController");
+const { deleteMembership, updateMembership, createMembership } = require("../controllers/membershipController");
+const { todayInGym, addMonthsToDate } = require("../utils/dates");
 const { NotFoundError } = require("../utils/errors");
 
 const res = () => ({
@@ -101,4 +102,43 @@ test("updateMembership on a missing membership rolls back with 404", async () =>
     NotFoundError,
   );
   assert.deepEqual(verbs(), ["BEGIN", "UPDATE", "ROLLBACK", "RELEASE"]);
+});
+
+test("createMembership takes name, price and dates from the plan, not the client", async () => {
+  script = [
+    { rows: [] }, // BEGIN
+    { rows: [{}] }, // member lock
+    { rows: [{ name: "Annual", price: "300.00", duration_months: 12 }] }, // plan
+    { rows: [{ id: "m1", plan_name: "Annual", price: "300.00", start_date: "x", end_date: "y" }] }, // insert
+    { rows: [] }, // reactivate
+    { rows: [] }, // COMMIT handled below
+  ];
+  const r = res();
+  await createMembership(
+    {
+      user: { id: 1, full_name: "Reception" },
+      // a tampered client: free plan, expiry far in the future
+      body: { member_id: UUID, plan_id: 7, price: 0, plan_name: "Free", end_date: "2099-01-01" },
+    },
+    r,
+  );
+
+  assert.equal(r.statusCode, 201);
+  const planQuery = log.find((l) => /FROM membership_plans/.test(l.full || ""));
+  assert.deepEqual(planQuery.params, [7]);
+  assert.match(planQuery.full, /is_active = true/);
+
+  const insert = log.find((l) => /INSERT INTO memberships/.test(l.full || ""));
+  const today = todayInGym();
+  assert.deepEqual(insert.params, [UUID, "Annual", "300.00", today, addMonthsToDate(today, 12)]);
+});
+
+test("createMembership rejects an unknown or inactive plan and writes nothing", async () => {
+  script = [{ rows: [] }, { rows: [{}] }, { rows: [] }];
+  await assert.rejects(
+    createMembership({ user: { id: 1, full_name: "R" }, body: { member_id: UUID, plan_id: 99 } }, res()),
+    NotFoundError,
+  );
+  assert.ok(!log.some((l) => /INSERT INTO memberships/.test(l.full || "")));
+  assert.deepEqual(verbs(), ["BEGIN", "SELECT", "SELECT", "ROLLBACK", "RELEASE"]);
 });
